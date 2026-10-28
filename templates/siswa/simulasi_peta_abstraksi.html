@@ -1,0 +1,129 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Simulasi 2: Peta Abstraksi - Portal KKA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <a href="/siswa/simulasi" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Kembali ke Lab Simulasi</span>
+        </a>
+        <span class="text-xs text-slate-400 font-mono">Simulasi 2 • Abstraksi</span>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-4">
+        <div class="border-b border-slate-100 pb-4">
+            <span class="bg-teal-50 text-teal-800 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                Pertemuan 2 • TP 2
+            </span>
+            <h1 class="text-2xl font-black text-slate-900 mt-2">Peta Abstraksi & Sortir Kartu Informasi</h1>
+            <p class="text-xs text-slate-500 mt-1">
+                Uji kemampuan abstraksi: pilah mana informasi yang <strong>benar-benar memengaruhi solusi antrean kantin</strong> dan mana detail yang boleh diabaikan.
+            </p>
+        </div>
+
+        <!-- Score & Instructions -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center text-xs">
+            <div>
+                <span class="font-bold text-slate-700">Tantangan:</span>
+                <span class="text-slate-500">Klik tombol hijau (PENTING) atau abu-abu (ABAIKAN) pada tiap kartu di bawah!</span>
+            </div>
+            <div class="text-right">
+                <span class="text-[10px] text-slate-400 block font-bold uppercase">Skor Akurasi</span>
+                <span class="font-black text-lg text-teal-600 font-mono" id="scoreDisplay">0 / 8 Tepat</span>
+            </div>
+        </div>
+
+        <!-- Cards Sorting Container -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="cardsGrid">
+            <!-- Cards rendered dynamically -->
+        </div>
+
+        <!-- Feedback & Rationale Modal / Box -->
+        <div id="feedbackBox" class="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 text-xs text-indigo-900 hidden">
+            <h4 class="font-bold flex items-center space-x-1 mb-1">
+                <i data-lucide="help-circle" class="w-4 h-4 text-indigo-600"></i>
+                <span>Uji Prinsip Abstraksi:</span>
+            </h4>
+            <p id="feedbackText">Pertanyaan kunci: "Jika data ini dihapus, apakah perhitungan waktu antre berubah?"</p>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const cardData = [
+        { id: 1, text: "Jumlah murid yang mengantre di kasir", target: "penting", reason: "Penting! Menentukan beban dan panjang antrean." },
+        { id: 2, text: "Warna seragam dan celemek penjual kantin", target: "abaikan", reason: "Boleh diabaikan. Warna seragam tidak memengaruhi kecepatan melayani." },
+        { id: 3, text: "Waktu rata-rata transaksi per murid (detik)", target: "penting", reason: "Penting! Menentukan seberapa cepat antrean berkurang." },
+        { id: 4, text: "Merek sepatu yang dipakai murid yang mengantre", target: "abaikan", reason: "Boleh diabaikan. Merek sepatu tidak ada kaitannya dengan solusi." },
+        { id: 5, text: "Jumlah kasir/petugas yang aktif melayani", target: "penting", reason: "Penting! Menentukan kapasitas dan jalur pembagi antrean." },
+        { id: 6, text: "Warna kemasan bungkus makanan ringan", target: "abaikan", reason: "Boleh diabaikan. Tidak memengaruhi logika aliran antrean." },
+        { id: 7, text: "Pola jam puncak kedatangan murid (menit 0–5)", target: "penting", reason: "Penting! Menjadi dasar penempatan jalur ekstra saat peak-time." },
+        { id: 8, text: "Cuaca mendung atau cerah di luar sekolah", target: "abaikan", reason: "Boleh diabaikan untuk kasus antrean kasir di dalam kantin tertutup." }
+    ];
+
+    let userChoices = {};
+
+    function renderCards() {
+        const grid = document.getElementById('cardsGrid');
+        grid.innerHTML = '';
+        let correctCount = 0;
+
+        cardData.forEach(c => {
+            const choice = userChoices[c.id];
+            let borderClass = 'border-slate-200 bg-white';
+            let statusText = '';
+
+            if (choice) {
+                if (choice === c.target) {
+                    borderClass = 'border-emerald-300 bg-emerald-50/50';
+                    statusText = `<span class="text-emerald-700 font-bold text-[10px]">✓ Tepat! ${c.reason}</span>`;
+                    correctCount++;
+                } else {
+                    borderClass = 'border-rose-300 bg-rose-50/50';
+                    statusText = `<span class="text-rose-700 font-bold text-[10px]">✗ Kurang tepat. ${c.reason}</span>`;
+                }
+            }
+
+            grid.innerHTML += `
+            <div class="p-4 rounded-2xl border ${borderClass} shadow-sm flex flex-col justify-between transition space-y-3">
+                <div>
+                    <span class="text-[10px] font-mono text-slate-400 block mb-1">Kartu #${c.id}</span>
+                    <p class="font-bold text-slate-800 text-xs">${c.text}</p>
+                </div>
+                ${statusText ? `<div class="p-2 bg-white/70 rounded-xl border border-slate-100">${statusText}</div>` : ''}
+                <div class="flex items-center space-x-2 pt-2 border-t border-slate-100/60">
+                    <button onclick="chooseCard(${c.id}, 'penting')" class="flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bold transition ${choice === 'penting' ? 'bg-teal-600 text-white' : 'bg-teal-50 text-teal-800 hover:bg-teal-100'}">
+                        Penting
+                    </button>
+                    <button onclick="chooseCard(${c.id}, 'abaikan')" class="flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bold transition ${choice === 'abaikan' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+                        Abaikan
+                    </button>
+                </div>
+            </div>`;
+        });
+
+        document.getElementById('scoreDisplay').innerText = `${correctCount} / ${cardData.length} Tepat`;
+        
+        if (Object.keys(userChoices).length === cardData.length) {
+            document.getElementById('feedbackBox').classList.remove('hidden');
+        }
+    }
+
+    function chooseCard(id, choice) {
+        userChoices[id] = choice;
+        renderCards();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCards();
+    });
+</script>
+{% endblock %}

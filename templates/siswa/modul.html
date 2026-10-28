@@ -1,0 +1,3157 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}{{ lesson.title }} - Sub-Materi Terpadu Portal KKA{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); transform: scale(1); }
+        50% { box-shadow: 0 0 25px rgba(244, 63, 94, 0.7); transform: scale(1.015); }
+    }
+    @keyframes pulsePriority {
+        0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); border-color: #f59e0b; }
+        50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.85); border-color: #fbbf24; }
+    }
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: translateY(12px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .node-anim {
+        animation: fadeInScale 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .pulse-root {
+        animation: pulseGlow 3s infinite ease-in-out;
+    }
+    .pulse-priority {
+        animation: pulsePriority 2s infinite ease-in-out;
+    }
+    .branch-line-anim {
+        transition: stroke 0.5s ease, stroke-width 0.5s ease, opacity 0.5s ease;
+    }
+    @keyframes flowDash {
+        to {
+            stroke-dashoffset: -24;
+        }
+    }
+    .fc-node {
+        transition: opacity 0.35s ease, filter 0.35s ease;
+    }
+    .fc-shape {
+        transition: stroke 0.35s ease, stroke-width 0.35s ease, fill 0.35s ease, filter 0.35s ease;
+    }
+    .fc-node-dimmed {
+        opacity: 0.22 !important;
+        filter: grayscale(85%);
+    }
+    .fc-node-active {
+        opacity: 1 !important;
+        filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.85));
+    }
+    .fc-node-active rect, .fc-node-active polygon {
+        stroke-width: 4 !important;
+    }
+    .fc-path-active {
+        stroke-width: 4 !important;
+        stroke-dasharray: 8 4;
+        animation: flowDash 0.8s linear infinite;
+    }
+    .fc-path-dimmed {
+        opacity: 0.15;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Flash Messages -->
+    {% if msg %}
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-sm">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+        <span>{{ msg }}</span>
+    </div>
+    {% endif %}
+
+    {% if err %}
+    <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-sm">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+        <span>{{ err }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Top Navigation / Breadcrumbs -->
+    <div class="flex flex-wrap items-center justify-between gap-2">
+        {% if user.role == 'guru' %}
+        <a href="/guru/materi" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Kembali ke Manajemen Modul Guru</span>
+        </a>
+        {% else %}
+        <a href="/siswa" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Kembali ke Alur Belajar Siswa</span>
+        </a>
+        {% endif %}
+
+        <div class="flex items-center space-x-2 text-xs">
+            <span class="bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-mono font-bold">Unit 1 • Pertemuan {{ lesson.meeting_number }}</span>
+            {% if user.role == 'guru' %}
+            <span class="bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full text-[10px] uppercase flex items-center space-x-1">
+                <i data-lucide="eye" class="w-3 h-3"></i>
+                <span>Mode Pratinjau Guru (Bebas Akses)</span>
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Header Card -->
+    <div class="bg-gradient-to-br from-white to-slate-50 rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="bg-indigo-600 text-white font-bold px-3.5 py-1 rounded-full text-xs uppercase tracking-wide shadow-sm">
+                Pertemuan {{ lesson.meeting_number }}
+            </span>
+            <span class="bg-indigo-50 text-indigo-700 font-mono text-xs px-3 py-1 rounded-full font-bold">
+                ⏱ {{ lesson.duration }}
+            </span>
+            <span class="bg-emerald-50 text-emerald-800 text-xs px-3 py-1 rounded-full font-medium border border-emerald-100">
+                🌱 Deep Learning: {{ lesson.principles }}
+            </span>
+        </div>
+
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">{{ lesson.title }}</h1>
+            <p class="text-xs sm:text-sm text-slate-600 mt-2 bg-indigo-50/50 p-3.5 rounded-2xl border border-indigo-100/70">
+                🎯 <strong>Fokus Capaian (TP):</strong> {{ lesson.tp_focus }}
+            </p>
+        </div>
+
+        <!-- Progress Tracker Mini Bar di dalam Pertemuan ini -->
+        {% if user.role == 'siswa' and progression %}
+        <div class="pt-2 border-t border-slate-100">
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Status Rangkaian Sub-Materi Sesi Ini:</div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                
+                <!-- Status 1: Materi & Slide -->
+                <div class="p-2.5 rounded-xl border flex items-center space-x-2 {% if lesson.meeting_number == 1 %}{% if progression.p1.read and progression.p1.slide %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}{% elif lesson.meeting_number == 2 %}{% if progression.p2.read and progression.p2.slide %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}{% else %}{% if progression.p3.read and progression.p3.slide %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}{% endif %}">
+                    <i data-lucide="book-open" class="w-4 h-4 shrink-0"></i>
+                    <div class="truncate">
+                        <span class="block font-bold text-[11px]">1. Konsep & Slide</span>
+                        <span class="text-[10px] block">
+                            {% if lesson.meeting_number == 1 %}{% if progression.p1.read and progression.p1.slide %}✓ Selesai{% else %}Sedang Belajar{% endif %}
+                            {% elif lesson.meeting_number == 2 %}{% if progression.p2.read and progression.p2.slide %}✓ Selesai{% else %}Sedang Belajar{% endif %}
+                            {% else %}{% if progression.p3.read and progression.p3.slide %}✓ Selesai{% else %}Sedang Belajar{% endif %}{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Status 2: Lab Simulasi -->
+                <div class="p-2.5 rounded-xl border flex items-center space-x-2 {% if sim_done %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}">
+                    <i data-lucide="gamepad-2" class="w-4 h-4 shrink-0"></i>
+                    <div class="truncate">
+                        <span class="block font-bold text-[11px]">2. Lab Simulasi</span>
+                        <span class="text-[10px] block">{% if sim_done %}✓ Selesai (100){% else %}Belum Selesai{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- Status 3: LKPD -->
+                <div class="p-2.5 rounded-xl border flex items-center space-x-2 {% if submission %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}">
+                    <i data-lucide="file-check-2" class="w-4 h-4 shrink-0"></i>
+                    <div class="truncate">
+                        <span class="block font-bold text-[11px]">3. LKPD Kelompok</span>
+                        <span class="text-[10px] block">
+                            {% if submission %}
+                                {% if submission.status == 'graded' %}Nilai: {{ submission.score }}{% else %}✓ Terkumpul{% endif %}
+                            {% else %}Belum Kumpul{% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Status 4: Kuis/Evaluasi -->
+                <div class="p-2.5 rounded-xl border flex items-center space-x-2 {% if lesson.meeting_number == 1 %}{% if quiz_attempt %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}{% elif lesson.meeting_number == 2 %}{% if sim_done and submission %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}{% else %}{% if progression.eval.exam_taken %}bg-emerald-50 border-emerald-200 text-emerald-800{% else %}bg-slate-50 border-slate-200 text-slate-600{% endif %}{% endif %}">
+                    <i data-lucide="award" class="w-4 h-4 shrink-0"></i>
+                    <div class="truncate">
+                        <span class="block font-bold text-[11px]">{% if lesson.meeting_number == 1 %}4. Kuis Sesi 1{% elif lesson.meeting_number == 2 %}4. Pemantapan Pola{% else %}4. Ujian Sumatif{% endif %}</span>
+                        <span class="text-[10px] block">
+                            {% if lesson.meeting_number == 1 %}
+                                {% if quiz_attempt %}Nilai: {{ quiz_attempt.score }}{% else %}Belum Kuis{% endif %}
+                            {% elif lesson.meeting_number == 2 %}
+                                {% if sim_done and submission %}✓ Tuntas{% else %}Menunggu LKPD{% endif %}
+                            {% else %}
+                                {% if progression.eval.exam_taken %}Nilai: {{ progression.eval.exam_score }}{% else %}Belum Ujian{% endif %}
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- MENU NAVIGASI SUB-MATERI TERPADU (TAB HEADER)                             -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-2xl p-2 border border-slate-200 shadow-sm flex flex-wrap gap-1 sm:gap-2">
+        
+        <!-- Tab 1: Konsep & Slide -->
+        <button type="button" onclick="switchSubTab('materi')" id="btnTabMateri" class="subtab-btn flex-1 min-w-[140px] py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition bg-indigo-600 text-white shadow-sm">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+            <span>Sub-Materi 1: Konsep & Slide</span>
+        </button>
+
+        <!-- Tab 2: Lab Simulasi -->
+        <button type="button" onclick="switchSubTab('simulasi')" id="btnTabSimulasi" class="subtab-btn flex-1 min-w-[140px] py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition text-slate-600 hover:bg-slate-100">
+            <i data-lucide="gamepad-2" class="w-4 h-4"></i>
+            <span>Sub-Materi 2: Lab Simulasi</span>
+            {% if sim_done %}
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            {% endif %}
+        </button>
+
+        <!-- Tab 3: LKPD Kelompok -->
+        <button type="button" onclick="switchSubTab('lkpd')" id="btnTabLkpd" class="subtab-btn flex-1 min-w-[140px] py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition text-slate-600 hover:bg-slate-100">
+            <i data-lucide="file-check-2" class="w-4 h-4"></i>
+            <span>Sub-Materi 3: Tugas LKPD</span>
+            {% if submission %}
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            {% endif %}
+        </button>
+
+        <!-- Tab 4: Kuis & Ujian Evaluasi -->
+        <button type="button" onclick="switchSubTab('evaluasi')" id="btnTabEvaluasi" class="subtab-btn flex-1 min-w-[140px] py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 transition text-slate-600 hover:bg-slate-100">
+            <i data-lucide="award" class="w-4 h-4"></i>
+            <span>
+                {% if lesson.meeting_number == 1 %}
+                    Sub-Materi 4: Kuis Sesi 1
+                {% elif lesson.meeting_number == 2 %}
+                    Sub-Materi 4: Cek Pemahaman Sesi 2
+                {% else %}
+                    Sub-Materi 4: Ujian Sumatif Unit 1
+                {% endif %}
+            </span>
+            {% if lesson.meeting_number == 1 and quiz_attempt %}
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            {% elif lesson.meeting_number == 3 and progression and progression.eval.exam_taken %}
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+            {% endif %}
+        </button>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1 CONTENT: KONSEP & SLIDE BAHAN TAYANG GURU                           -->
+    <!-- ========================================================================= -->
+    <div id="panelTabMateri" class="subtab-panel space-y-6">
+
+        <!-- Slide Bahan Tayang Guru Card -->
+        <div class="bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 rounded-3xl p-6 text-white shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border border-indigo-700/50">
+            <div class="flex items-center space-x-4">
+                <div class="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center shrink-0 border border-white/20">
+                    <i data-lucide="presentation" class="w-7 h-7 text-indigo-300"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold text-teal-300 uppercase tracking-wider block">Bahan Tayang Resmi Guru</span>
+                    <h3 class="font-bold text-white text-base mt-0.5">
+                        {% if lesson.slide_file_name %}
+                            {{ lesson.slide_file_name }}
+                        {% else %}
+                            Slide Presentasi Pertemuan {{ lesson.meeting_number }}
+                        {% endif %}
+                    </h3>
+                    <p class="text-xs text-indigo-200 mt-1">
+                        Bahan tayang presentasi kelas yang memuat studi kasus, diagram pohon, dan alur konsep pembelajaran.
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                {% if lesson.slide_file_path %}
+                <a href="/siswa/modul/{{ lesson.id }}/slide" target="_blank" download class="bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold text-xs px-4 py-2.5 rounded-xl transition shadow flex items-center space-x-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Buka / Unduh Slide</span>
+                </a>
+                {% else %}
+                <span class="text-xs text-indigo-300 bg-white/10 px-3 py-2 rounded-xl italic border border-white/10">
+                    Slide akan diunggah oleh Guru
+                </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Narrative Case Study: Rani & Dimas -->
+        {% if lesson.narrative_title and lesson.narrative_content %}
+        <div class="bg-gradient-to-br from-amber-50 to-orange-50/50 rounded-3xl p-6 sm:p-8 border border-amber-200/80 shadow-sm relative overflow-hidden">
+            <div class="flex items-center space-x-3 text-amber-800 font-bold text-xs uppercase tracking-wider mb-2">
+                <div class="w-7 h-7 rounded-xl bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                </div>
+                <span>Studi Kasus Naratif Remaja (Konteks Nyata)</span>
+            </div>
+            <h2 class="text-xl font-black text-amber-950 mb-3">{{ lesson.narrative_title }}</h2>
+            <div class="text-sm text-amber-900/90 leading-relaxed italic bg-white/80 p-5 rounded-2xl border border-amber-100 whitespace-pre-line shadow-inner font-serif">
+                "{{ lesson.narrative_content }}"
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Lesson Body HTML Content -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm text-slate-800 text-sm leading-relaxed space-y-4">
+            {{ lesson.content_html|safe }}
+        </div>
+
+        <!-- Next Action Bar: Tandai Selesai & Lanjut ke Lab Simulasi -->
+        <div class="bg-indigo-50 border border-indigo-200 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h4 class="font-bold text-indigo-950 text-base">Sudah Memahami Teori & Slide?</h4>
+                <p class="text-xs text-indigo-700 mt-0.5">Tandai telah selesai mempelajari materi ini lalu praktikkan langsung di Lab Simulasi interaktif.</p>
+            </div>
+            
+            {% if user.role == 'siswa' %}
+            <form method="POST" action="/siswa/modul/{{ lesson.id }}/tandai-materi" class="shrink-0">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow transition flex items-center space-x-2">
+                    <span>Tandai Selesai & Buka Lab Simulasi</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </form>
+            {% else %}
+            <button type="button" onclick="switchSubTab('simulasi')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow transition flex items-center space-x-2">
+                <span>Lanjut ke Pratinjau Lab Simulasi</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2 CONTENT: LAB SIMULASI INTERAKTIF                                   -->
+    <!-- ========================================================================= -->
+    <div id="panelTabSimulasi" class="subtab-panel space-y-6 hidden">
+
+        <!-- Status Header Simulasi -->
+        <div class="rounded-3xl p-6 border {% if sim_done %}bg-emerald-50 border-emerald-200 text-emerald-950{% else %}bg-teal-50 border-teal-200 text-teal-950{% endif %} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-2xl {% if sim_done %}bg-emerald-600 text-white{% else %}bg-teal-600 text-white{% endif %} flex items-center justify-center shrink-0 shadow-md">
+                    <i data-lucide="gamepad-2" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider block {% if sim_done %}text-emerald-700{% else %}text-teal-700{% endif %}">
+                        Sub-Materi 2 • Praktik Virtual
+                    </span>
+                    <h3 class="text-lg font-black mt-0.5">
+                        {% if lesson.meeting_number == 1 %}
+                            Lab 1: Pohon Dekomposisi 3 Tingkat
+                        {% elif lesson.meeting_number == 2 %}
+                            Lab 2: Peta Abstraksi & Sortir Kartu Informasi
+                        {% else %}
+                            Lab 3: Dry-Run Engine & Flowchart Kasir
+                        {% endif %}
+                    </h3>
+                    <p class="text-xs {% if sim_done %}text-emerald-800{% else %}text-teal-800{% endif %}">
+                        {% if sim_done %}
+                            ✅ Hebat! Capaian Lab Simulasi untuk pertemuan ini telah tersimpan di akun Anda (Skor: 100/100).
+                        {% else %}
+                            Eksplorasi simulasi interaktif di bawah ini untuk mengonfirmasi pemahaman konsep berpikir komputasional Anda.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-2 shrink-0">
+                {% if lesson.interactive_type != 'none' %}
+                <a href="/siswa/simulasi/{{ lesson.interactive_type }}" target="_blank" class="bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-1.5 transition">
+                    <i data-lucide="maximize-2" class="w-4 h-4"></i>
+                    <span>Mode Layar Penuh</span>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- SIMULASI KHUSUS PERTEMUAN 1: POHON DEKOMPOSISI BERURUTAN TERPADU -->
+        {% if lesson.meeting_number == 1 %}
+        <div class="space-y-6">
+            
+            <!-- 1. Pemilih 3 Skenario Autentik -->
+            <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                        <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Pilih 1 dari 3 Skenario Masalah Autentik Sekolah:</span>
+                    </label>
+                    <span class="text-[11px] text-slate-400">Klik kartu untuk beralih skenario</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <!-- Skenario 1: Kantin -->
+                    <button type="button" onclick="selectScenario('kantin')" id="cardScenarioKantin" class="scenario-card p-4 rounded-2xl border-2 text-left transition duration-200 relative overflow-hidden bg-white border-indigo-600 shadow-md ring-2 ring-indigo-200">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg shrink-0">
+                                🍔
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold uppercase text-indigo-700 block tracking-wide">Skenario 1 (Kasus Utama)</span>
+                                <h4 class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 leading-snug">Antrean Panjang Kasir Kantin</h4>
+                                <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">Waktu antrean 15 menit, murid kehabisan waktu istirahat dan belum sempat makan.</p>
+                            </div>
+                        </div>
+                        <div class="active-badge absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-600"></div>
+                    </button>
+
+                    <!-- Skenario 2: Sampah -->
+                    <button type="button" onclick="selectScenario('sampah')" id="cardScenarioSampah" class="scenario-card p-4 rounded-2xl border-2 text-left transition duration-200 relative overflow-hidden bg-white border-slate-200 hover:border-slate-300">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg shrink-0">
+                                ♻️
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold uppercase text-slate-400 block tracking-wide">Skenario 2</span>
+                                <h4 class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 leading-snug">Sampah Tidak Terpilah</h4>
+                                <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">Sampah plastik dan makanan tercampur meluber di kantin dan lorong sekolah.</p>
+                            </div>
+                        </div>
+                        <div class="active-badge hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-600"></div>
+                    </button>
+
+                    <!-- Skenario 3: Piket -->
+                    <button type="button" onclick="selectScenario('piket')" id="cardScenarioPiket" class="scenario-card p-4 rounded-2xl border-2 text-left transition duration-200 relative overflow-hidden bg-white border-slate-200 hover:border-slate-300">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg shrink-0">
+                                🧹
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold uppercase text-slate-400 block tracking-wide">Skenario 3</span>
+                                <h4 class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 leading-snug">Piket Kelas Sering Terabaikan</h4>
+                                <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">Siswa pulang tanpa bekerja, ruang kelas kotor saat bel masuk pagi.</p>
+                            </div>
+                        </div>
+                        <div class="active-badge hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-600"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Kotak Narasi Konteks -->
+            <div id="scenarioContextBox" class="bg-gradient-to-br from-amber-50 to-orange-50/60 rounded-3xl p-5 border border-amber-200 text-xs sm:text-sm text-amber-950 space-y-2 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold uppercase tracking-wider text-[11px] text-amber-800 flex items-center space-x-1.5">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-amber-600"></i>
+                        <span id="scenarioContextTag">Latar Belakang Kasus: Antrean Kantin Sekolah</span>
+                    </span>
+                    <span class="bg-amber-200/60 text-amber-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Autentik SMA</span>
+                </div>
+                <p id="scenarioContextDesc" class="leading-relaxed italic font-serif text-slate-800 bg-white/80 p-3.5 rounded-xl border border-amber-100">
+                    "Bel istirahat 20 menit berbunyi. Sebanyak 180 siswa SMA serempak menuju kantin. Antrean kasir mengular panjang hingga ke lorong kelas, membuat Rani dan Dimas kehabisan waktu istirahat dan belum sempat makan saat bel masuk berbunyi."
+                </p>
+                <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-amber-900 pt-1">
+                    <span>🎯 <strong>Tujuan Dekomposisi:</strong> <span id="scenarioContextGoal">Mengurai sumber keterlambatan menjadi unit kerja operasional yang bisa diselesaikan kelompok.</span></span>
+                    <span class="font-mono text-slate-500">Unit 1 • Fase E</span>
+                </div>
+            </div>
+
+            <!-- 3. Stepper & Playback Controls (5 Langkah Berurutan) -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div>
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Urutan Percabangan Masalah (Graf Berurutan):</div>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                        <button type="button" onclick="goToStep(0)" id="stepBtn0" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-indigo-600 text-white border-indigo-600 shadow-sm">
+                            <span class="block text-[9px] font-bold opacity-80 uppercase">Langkah 1</span>
+                            <span class="block text-xs mt-0.5 truncate">0. Masalah Utama</span>
+                        </button>
+                        <button type="button" onclick="goToStep(1)" id="stepBtn1" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                            <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 2</span>
+                            <span class="block text-xs mt-0.5 truncate" id="stepLabel1">Cabang A (+ Sub)</span>
+                        </button>
+                        <button type="button" onclick="goToStep(2)" id="stepBtn2" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                            <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 3</span>
+                            <span class="block text-xs mt-0.5 truncate" id="stepLabel2">Cabang B (+ Sub)</span>
+                        </button>
+                        <button type="button" onclick="goToStep(3)" id="stepBtn3" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                            <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 4</span>
+                            <span class="block text-xs mt-0.5 truncate" id="stepLabel3">Cabang C (+ Sub)</span>
+                        </button>
+                        <button type="button" onclick="goToStep(4)" id="stepBtn4" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                            <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 5</span>
+                            <span class="block text-xs mt-0.5 truncate">Pohon Utuh & Prioritas</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="togglePlayPause()" id="btnPlayPause" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center space-x-1.5">
+                            <i data-lucide="play" id="iconPlay" class="w-4 h-4"></i>
+                            <span id="textPlay">Putar Animasi Berurutan</span>
+                        </button>
+                        <button type="button" onclick="prevStep()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Sebelumnya">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" onclick="nextStep()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Berikutnya">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                        <button type="button" onclick="resetAnimation()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Ulangi dari Langkah 1">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-3 text-xs">
+                        <div class="flex items-center space-x-1.5 text-slate-500">
+                            <span class="text-[11px] font-semibold">Kecepatan:</span>
+                            <select id="animSpeedSelect" onchange="changeSpeed()" class="p-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white outline-none">
+                                <option value="4500">Santai (4.5 detik)</option>
+                                <option value="2800" selected>Normal (2.8 detik)</option>
+                                <option value="1600">Cepat (1.6 detik)</option>
+                            </select>
+                        </div>
+                        <div class="w-24 bg-slate-100 rounded-full h-2 overflow-hidden hidden sm:block">
+                            <div id="animProgressFill" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Kanvas Graf Pohon Dekomposisi Terpadu (Hierarki Menyatu) -->
+            <div class="bg-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-slate-800 space-y-6 relative overflow-hidden">
+                <!-- Status Bar -->
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800/80 pb-3 text-xs font-mono">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping"></span>
+                        <span class="text-teal-400 font-bold" id="canvasStatusText">Langkah 1: Identifikasi Akar Masalah Utama</span>
+                    </div>
+                    <span class="text-slate-500 text-[11px]" id="stepCounterText">Langkah 1 dari 5</span>
+                </div>
+
+                <!-- TINGKAT 0: AKAR MASALAH (ROOT NODE) -->
+                <div id="nodeRootContainer" class="flex flex-col items-center justify-center relative">
+                    <div class="text-[10px] font-bold uppercase tracking-wider text-rose-400 mb-1 flex items-center space-x-1">
+                        <span>[ Tingkat 0 : Akar Masalah Utama ]</span>
+                    </div>
+                    <div id="rootCard" class="max-w-xl w-full bg-gradient-to-r from-rose-900/90 via-red-900 to-rose-950 p-4 sm:p-5 rounded-2xl border-2 border-rose-500 text-white shadow-lg pulse-root text-center transition-all duration-500">
+                        <div class="flex items-center justify-center space-x-2 text-rose-300 text-xs font-bold uppercase mb-1">
+                            <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                            <span>Masalah Utama Belum Terurai</span>
+                        </div>
+                        <h3 class="text-base sm:text-lg font-black text-white" id="rootCardTitle">
+                            Mengurangi Waktu Antrean Kasir Kantin dari 15 Menit Menjadi 3 Menit
+                        </h3>
+                    </div>
+                </div>
+
+                <!-- SVG PERCABANGAN GRAF KE CABANG A, B, C -->
+                <div class="relative w-full h-12 hidden md:block">
+                    <svg class="w-full h-full" viewBox="0 0 900 48" preserveAspectRatio="none">
+                        <line x1="450" y1="0" x2="450" y2="20" stroke="#6366f1" stroke-width="2.5" />
+                        <line x1="150" y1="20" x2="750" y2="20" stroke="#4338ca" stroke-width="2" stroke-dasharray="4" />
+                        <path id="svgBranchA" class="branch-line-anim" d="M 450 20 L 150 20 L 150 48" fill="none" stroke="#64748b" stroke-width="2" />
+                        <path id="svgBranchB" class="branch-line-anim" d="M 450 20 L 450 48" fill="none" stroke="#64748b" stroke-width="2" />
+                        <path id="svgBranchC" class="branch-line-anim" d="M 450 20 L 750 20 L 750 48" fill="none" stroke="#64748b" stroke-width="2" />
+                    </svg>
+                </div>
+
+                <!-- TINGKAT 1 & TINGKAT 2: 3 KOLOM CABANG MENYATU (TERPADU) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="treeColumnsContainer">
+                    
+                    <!-- KOLOM CABANG A -->
+                    <div id="branchColA" class="tree-col space-y-3 transition-all duration-500 opacity-20 filter grayscale">
+                        <div id="branchCardA" class="p-4 rounded-2xl border-2 border-sky-500 bg-slate-900 text-sky-100 space-y-2 shadow-lg">
+                            <div class="flex items-center justify-between text-[10px] font-mono">
+                                <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider" id="branchBadgeA">Dimensi 1</span>
+                                <span class="font-bold text-white bg-sky-600 px-1.5 py-0.5 rounded">Cabang A</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm" id="branchTitleA">Pola & Waktu Kedatangan Murid</h4>
+                            
+                            <!-- Kotak: Mengapa Cabang Ini Dibuat? -->
+                            <div class="p-2.5 rounded-xl bg-sky-950/80 border border-sky-700/60 text-[11px] space-y-1">
+                                <span class="font-bold text-sky-300 flex items-center space-x-1">
+                                    <i data-lucide="help-circle" class="w-3.5 h-3.5 text-sky-400"></i>
+                                    <span>Mengapa Cabang A Dibuat?</span>
+                                </span>
+                                <p class="text-slate-300 leading-relaxed italic" id="branchWhyA">
+                                    Karena lonjakan murid datang serempak pada 5 menit pertama saat bel berbunyi.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Batang Penghubung Vertikal ke Sub-Masalah -->
+                        <div class="flex flex-col items-center justify-center py-1">
+                            <div class="w-0.5 h-4 bg-sky-500/60"></div>
+                            <span class="text-[9px] font-mono text-sky-400 font-bold uppercase tracking-wider">↓ Sub-Masalah Operasional ↓</span>
+                        </div>
+
+                        <!-- Sub-Masalah Operasional Tingkat 2 -->
+                        <div class="space-y-2" id="subContainerA"></div>
+                    </div>
+
+                    <!-- KOLOM CABANG B -->
+                    <div id="branchColB" class="tree-col space-y-3 transition-all duration-500 opacity-20 filter grayscale">
+                        <div id="branchCardB" class="p-4 rounded-2xl border-2 border-indigo-500 bg-slate-900 text-indigo-100 space-y-2 shadow-lg">
+                            <div class="flex items-center justify-between text-[10px] font-mono">
+                                <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider" id="branchBadgeB">Dimensi 2</span>
+                                <span class="font-bold text-white bg-indigo-600 px-1.5 py-0.5 rounded">Cabang B</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm" id="branchTitleB">Efisiensi Layanan & Transaksi Kasir</h4>
+                            
+                            <!-- Kotak: Mengapa Cabang Ini Dibuat? -->
+                            <div class="p-2.5 rounded-xl bg-indigo-950/80 border border-indigo-700/60 text-[11px] space-y-1">
+                                <span class="font-bold text-indigo-300 flex items-center space-x-1">
+                                    <i data-lucide="help-circle" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                    <span>Mengapa Cabang B Dibuat?</span>
+                                </span>
+                                <p class="text-slate-300 leading-relaxed italic" id="branchWhyB">
+                                    Karena meja kasir adalah titik kemacetan utama (bottleneck) pembayaran dan kembalian.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Batang Penghubung Vertikal ke Sub-Masalah -->
+                        <div class="flex flex-col items-center justify-center py-1">
+                            <div class="w-0.5 h-4 bg-indigo-500/60"></div>
+                            <span class="text-[9px] font-mono text-indigo-400 font-bold uppercase tracking-wider">↓ Sub-Masalah Operasional ↓</span>
+                        </div>
+
+                        <!-- Sub-Masalah Operasional Tingkat 2 -->
+                        <div class="space-y-2" id="subContainerB"></div>
+                    </div>
+
+                    <!-- KOLOM CABANG C -->
+                    <div id="branchColC" class="tree-col space-y-3 transition-all duration-500 opacity-20 filter grayscale">
+                        <div id="branchCardC" class="p-4 rounded-2xl border-2 border-teal-500 bg-slate-900 text-teal-100 space-y-2 shadow-lg">
+                            <div class="flex items-center justify-between text-[10px] font-mono">
+                                <span class="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider" id="branchBadgeC">Dimensi 3</span>
+                                <span class="font-bold text-white bg-teal-600 px-1.5 py-0.5 rounded">Cabang C</span>
+                            </div>
+                            <h4 class="font-bold text-white text-sm" id="branchTitleC">Alur Fisik & Penataan Jalur Antrean</h4>
+                            
+                            <!-- Kotak: Mengapa Cabang Ini Dibuat? -->
+                            <div class="p-2.5 rounded-xl bg-teal-950/80 border border-teal-700/60 text-[11px] space-y-1">
+                                <span class="font-bold text-teal-300 flex items-center space-x-1">
+                                    <i data-lucide="help-circle" class="w-3.5 h-3.5 text-teal-400"></i>
+                                    <span>Mengapa Cabang C Dibuat?</span>
+                                </span>
+                                <p class="text-slate-300 leading-relaxed italic" id="branchWhyC">
+                                    Karena ruang fisik kantin terbatas dan jalur antre saling bertabrakan dengan jalur keluar.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Batang Penghubung Vertikal ke Sub-Masalah -->
+                        <div class="flex flex-col items-center justify-center py-1">
+                            <div class="w-0.5 h-4 bg-teal-500/60"></div>
+                            <span class="text-[9px] font-mono text-teal-400 font-bold uppercase tracking-wider">↓ Sub-Masalah Operasional ↓</span>
+                        </div>
+
+                        <!-- Sub-Masalah Operasional Tingkat 2 -->
+                        <div class="space-y-2" id="subContainerC"></div>
+                    </div>
+
+                </div>
+
+                <!-- TINGKAT 3: KESIMPULAN AKAR MASALAH PRIORITAS -->
+                <div id="level3PriorityContainer" class="transition-all duration-500 opacity-0 hidden pt-4 border-t border-slate-800">
+                    <div class="bg-gradient-to-r from-amber-950/90 via-yellow-950/70 to-slate-900 p-5 rounded-2xl border-2 border-amber-500 text-white space-y-2 pulse-priority">
+                        <div class="flex items-center space-x-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                            <i data-lucide="target" class="w-4 h-4"></i>
+                            <span>Hasil Analisis Dekomposisi: Akar Masalah Prioritas (Critical Bottleneck)</span>
+                        </div>
+                        <h4 class="text-sm sm:text-base font-black text-amber-200" id="priorityTitle">
+                            Akar Masalah Kunci: Transaksi Tunai dan Kembalian di Jam Puncak (Menit 0-5)
+                        </h4>
+                        <p class="text-xs text-slate-300 leading-relaxed" id="priorityDesc">
+                            Dari 3 cabang dekomposisi di atas, unit ini menyumbang 65% waktu antrean. Solusi kelompok akan difokuskan membuat sistem "Paket Menu Uang Pas" dan "Jalur Cepat Kasir Khusus" sebelum mengatur tata ruang fisik kantin.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Kotak Penjelasan Pedagogis Deep Learning -->
+            <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm space-y-3">
+                <div class="flex items-center space-x-2 text-indigo-700 font-bold text-xs uppercase tracking-wider">
+                    <div class="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center">
+                        <i data-lucide="book-open-check" class="w-4 h-4 text-indigo-600"></i>
+                    </div>
+                    <span id="pedagogyStepTitle">Pelajaran Berpikir Komputasional: Mengapa Memecah Seperti Ini?</span>
+                </div>
+                <p id="pedagogyExplanation" class="text-xs sm:text-sm text-slate-700 leading-relaxed bg-indigo-50/40 p-4 rounded-2xl border border-indigo-100">
+                    Dekomposisi bukan sekadar membagi orang atau tugas seenaknya. Dekomposisi adalah membedah <strong>struktur masalahnya sendiri</strong> ke bagian-bagian yang independen dan terukur. Ketika masalah sudah diurai sampai Tingkat 2, setiap anggota tim tahu persis apa yang harus diselesaikan!
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-[11px]">
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-0.5">🌱 Berkeadaban</span>
+                        <span class="text-slate-500">Pembagian tugas kelompok menjadi adil dan transparan tanpa saling menyalahkan.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-0.5">💡 Bermakna</span>
+                        <span class="text-slate-500">Mengurai data nyata sekolah (waktu antrean, volume sampah, beban piket).</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-0.5">✨ Menggembirakan</span>
+                        <span class="text-slate-500">Masalah raksasa yang membingungkan menjadi ringan dan jelas solusinya.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Form Tambah Sub-Masalah Kustom -->
+            <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                        <i data-lucide="plus-circle" class="w-4 h-4 text-teal-600"></i>
+                        <span>Tantangan Mandiri: Tambahkan Sub-Masalah Kustom Kamu Sendiri</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Punya ide sub-masalah lain? Masukkan langsung ke bawah Cabang A, B, atau C untuk melihat sub-masalah tersebut tersisip di kolom yang tepat.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1 text-xs">Pilih Cabang (Tingkat 1):</label>
+                        <select id="customBranchParent" class="w-full p-2.5 rounded-xl border border-slate-300 font-semibold bg-white text-xs outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1 text-xs">Sub-Masalah Operasional Baru:</label>
+                        <input type="text" id="customSubText" placeholder="Contoh: Mengatur menu pre-order via WA..." class="w-full p-2.5 rounded-xl border border-slate-300 font-semibold bg-white text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="button" onclick="addCustomSubProblem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl transition shadow flex items-center justify-center space-x-1.5">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Tambahkan ke Pohon Graf</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+        <!-- SIMULASI KHUSUS PERTEMUAN 2: PETA ABSTRAKSI -->
+        {% if lesson.meeting_number == 2 %}
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Lab Sortir Abstraksi: Pilah Data Informasi Kantin</h3>
+                    <p class="text-xs text-slate-500">Klasifikasikan 8 fakta berikut: manakah data yang <strong>PENTING</strong> vs <strong>DIABAIKAN</strong> untuk menyelesaikan antrean?</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 font-bold block uppercase">Skor Akurasi</span>
+                    <span id="p2ScoreDisplay" class="font-black text-teal-600 text-base font-mono">0 / 8 Selesai</span>
+                </div>
+            </div>
+
+            <!-- Card grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="p2CardsGrid">
+                <!-- Javascript will render cards here -->
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SIMULASI KHUSUS PERTEMUAN 3: DRY-RUN ENGINE FLOWCHART ANIMATOR -->
+        {% if lesson.meeting_number == 3 %}
+        <div class="space-y-6">
+
+            <!-- 1. Header & Deskripsi Flowchart -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-7 text-white shadow-xl space-y-3 border border-indigo-800/40">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <span class="bg-amber-500 text-slate-950 font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow">
+                        Pertemuan 3 • TP 3 Berpikir Komputasional
+                    </span>
+                    <span class="bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 text-xs px-3 py-1 rounded-full font-mono">
+                        ⚙️ Dry-Run Flowchart Engine
+                    </span>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-black text-white">
+                    Diagram Alir (Flowchart) Pengarahan Kasir Kantin
+                </h3>
+                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
+                    Amati bagaimana instruksi algoritma dieksekusi langkah demi langkah melalui simbol standar diagram alir:
+                    <strong>Terminator</strong>, <strong>Input / Output</strong>, <strong>Percabangan (Decision)</strong>, dan <strong>Proses</strong>. Uji berbagai nilai antrean serta amati perilaku sistem saat menghadapi <strong>Kasus Khusus (Edge Case)</strong> ketika Kasir 1 tutup!
+                </p>
+            </div>
+
+            <!-- 2. Panduan Legenda 4 Simbol Standar Flowchart (ANSI/ISO) -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                        <i data-lucide="shapes" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Legenda Simbol Standar Flowchart (ANSI / ISO):</span>
+                    </span>
+                    <span class="text-[11px] text-slate-400 font-mono">Standar Informatika Fase E</span>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <!-- 1. Terminator -->
+                    <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                        <div class="flex items-center space-x-1.5 text-emerald-800 font-bold text-[11px]">
+                            <span class="w-3.5 h-3.5 rounded-full bg-emerald-600 inline-block shrink-0"></span>
+                            <span>Terminator (Oval)</span>
+                        </div>
+                        <p class="text-[10px] text-slate-600 leading-snug">Menandai awal <code>[MULAI]</code> dan akhir <code>[SELESAI]</code> aliran program.</p>
+                    </div>
+
+                    <!-- 2. Input / Output -->
+                    <div class="p-3 rounded-2xl bg-sky-50/70 border border-sky-200 space-y-1">
+                        <div class="flex items-center space-x-1.5 text-sky-800 font-bold text-[11px]">
+                            <span class="w-3.5 h-3.5 transform -skew-x-12 bg-sky-600 inline-block shrink-0"></span>
+                            <span>Input / Output</span>
+                        </div>
+                        <p class="text-[10px] text-slate-600 leading-snug">Membaca data masukan murid atau mencetak keputusan hasil kasir.</p>
+                    </div>
+
+                    <!-- 3. Decision -->
+                    <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-1">
+                        <div class="flex items-center space-x-1.5 text-amber-800 font-bold text-[11px]">
+                            <span class="w-3.5 h-3.5 rotate-45 bg-amber-500 inline-block shrink-0"></span>
+                            <span>Decision (Belah Ketupat)</span>
+                        </div>
+                        <p class="text-[10px] text-slate-600 leading-snug">Pemeriksaan kondisi Boolean: menghasilkan cabang <code>[YA]</code> atau <code>[TIDAK]</code>.</p>
+                    </div>
+
+                    <!-- 4. Proses -->
+                    <div class="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-1">
+                        <div class="flex items-center space-x-1.5 text-indigo-800 font-bold text-[11px]">
+                            <span class="w-3.5 h-3.5 rounded-sm bg-indigo-600 inline-block shrink-0"></span>
+                            <span>Proses (Persegi Panjang)</span>
+                        </div>
+                        <p class="text-[10px] text-slate-600 leading-snug">Instruksi penugasan variabel, misalnya menetapkan <code>tujuan = "Kasir 1"</code>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Panel Variabel Input & Preset Kasus Uji -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                        <i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i>
+                        <span>Parameter Variabel Uji (Test Data Input):</span>
+                    </label>
+                    <span class="text-[11px] text-slate-400">Atur angka di bawah atau klik tombol preset cepat</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                        <label class="block font-bold text-slate-700 text-xs">Panjang Antrean Kasir 1 (antrean1):</label>
+                        <input type="number" id="p3Antrean1" value="4" min="0" max="99" onchange="onInputChange()" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-slate-800 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                        <span class="text-[10px] text-slate-500 block">Jumlah murid yang sedang antre</span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                        <label class="block font-bold text-slate-700 text-xs">Panjang Antrean Kasir 2 (antrean2):</label>
+                        <input type="number" id="p3Antrean2" value="2" min="0" max="99" onchange="onInputChange()" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-slate-800 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                        <span class="text-[10px] text-slate-500 block">Jumlah murid yang sedang antre</span>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                        <label class="block font-bold text-slate-700 text-xs">Status Kasir 1 (status_k1):</label>
+                        <select id="p3Kasir1Aktif" onchange="onInputChange()" class="w-full p-2.5 rounded-xl border border-slate-300 font-semibold text-slate-800 text-xs bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="true">Kasir 1 Buka & Melayani (Normal)</option>
+                            <option value="false">Kasir 1 TUTUP / Istirahat (Kasus Khusus)</option>
+                        </select>
+                        <span class="text-[10px] text-slate-500 block">Kondisi operasional kasir utama</span>
+                    </div>
+                </div>
+
+                <!-- Preset Buttons -->
+                <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
+                    <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mr-1">Preset Kasus Cepat:</span>
+                    <button type="button" onclick="applyPreset(2, 5, true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold text-xs transition border border-slate-200">
+                        Case 1: Kasir 1 Lebih Pendek (2 vs 5)
+                    </button>
+                    <button type="button" onclick="applyPreset(6, 2, true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold text-xs transition border border-slate-200">
+                        Case 2: Kasir 2 Lebih Pendek (6 vs 2)
+                    </button>
+                    <button type="button" onclick="applyPreset(1, 4, false)" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold text-xs transition border border-rose-200">
+                        ⚠️ Case 3: Kasir 1 Tutup (Edge Case)
+                    </button>
+                    <button type="button" onclick="applyPreset(3, 3, true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold text-xs transition border border-slate-200">
+                        Case 4: Antrean Sama (3 vs 3)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. Kontrol Stepper & Toolbar Animasi -->
+            <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="togglePlayPauseTrace()" id="btnPlayTrace" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center space-x-1.5">
+                            <i data-lucide="play" id="iconPlayTrace" class="w-4 h-4"></i>
+                            <span id="textPlayTrace">Putar Animasi Flowchart</span>
+                        </button>
+
+                        <button type="button" onclick="prevStepTrace()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Sebelumnya">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+
+                        <button type="button" onclick="nextStepTrace()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Berikutnya">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+
+                        <button type="button" onclick="resetTraceFlowchart()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Reset Diagram">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex items-center space-x-3 text-xs">
+                        <div class="flex items-center space-x-1.5 text-slate-500">
+                            <span class="text-[11px] font-semibold">Kecepatan:</span>
+                            <select id="traceSpeedSelect" onchange="changeTraceSpeed()" class="p-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white outline-none">
+                                <option value="2500">Santai (2.5 detik)</option>
+                                <option value="1500" selected>Normal (1.5 detik)</option>
+                                <option value="800">Cepat (0.8 detik)</option>
+                            </select>
+                        </div>
+
+                        <div class="w-24 bg-slate-100 rounded-full h-2 overflow-hidden hidden sm:block">
+                            <div id="traceProgressFill" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. KANVAS DIAGRAM ALIR (FLOWCHART SVG CANVAS) -->
+            <div class="bg-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-slate-800 space-y-5 relative overflow-hidden">
+                <!-- Status Bar -->
+                <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800/80 pb-3 text-xs font-mono">
+                    <div class="flex items-center space-x-2">
+                        <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                        <span class="text-amber-400 font-bold" id="flowchartStatusText">Siap: Klik 'Putar Animasi Flowchart' atau 'Langkah Berikutnya'</span>
+                    </div>
+                    <span class="text-slate-400 text-[11px]" id="flowchartStepCounter">Langkah 0 dari 7</span>
+                </div>
+
+                <!-- SVG Interactive Container -->
+                <div class="overflow-x-auto py-2">
+                    <svg id="flowchartSvg" viewBox="0 0 920 830" class="w-full max-w-4xl mx-auto h-auto transition-all duration-300">
+                        <defs>
+                            <!-- Arrowhead Marker (Default) -->
+                            <marker id="arrow-default" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+                            </marker>
+                            <!-- Arrowhead Marker (Active Indigo) -->
+                            <marker id="arrow-active" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 1 L 10 5 L 0 9 z" fill="#818cf8" />
+                            </marker>
+                            <!-- Arrowhead Marker (Active Green - YA) -->
+                            <marker id="arrow-true" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
+                            </marker>
+                            <!-- Arrowhead Marker (Active Rose - TIDAK) -->
+                            <marker id="arrow-false" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f87171" />
+                            </marker>
+                        </defs>
+
+                        <!-- FLOWLINES (BACKGROUND LAYER) -->
+                        <!-- Line 1 to 2 -->
+                        <path id="path_1_2" d="M 460 69 L 460 105" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+                        
+                        <!-- Line 2 to 3 -->
+                        <path id="path_2_3" d="M 460 177 L 460 218" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+                        
+                        <!-- Branch from Decision 1: YA (Buka) -> Goes down to Decision 2 -->
+                        <path id="path_3_4_ya" d="M 460 342 L 460 414" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                        <!-- Branch from Decision 1: TIDAK (Tutup) -> Bypass to Process B -->
+                        <path id="path_3_5b_tidak" d="M 625 280 L 760 280 L 760 535" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                        <!-- Branch from Decision 2: YA (antrean1 <= antrean2) -> Goes left and down to Process A -->
+                        <path id="path_4_5a_ya" d="M 295 476 L 160 476 L 160 535" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                        <!-- Branch from Decision 2: TIDAK (antrean1 > antrean2) -> Goes right and down to Process B -->
+                        <path id="path_4_5b_tidak" d="M 625 476 L 760 476 L 760 535" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                        <!-- Merge Line from Process A to Output -->
+                        <path id="path_5a_6" d="M 160 605 L 160 628 L 460 628 L 460 642" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                        <!-- Merge Line from Process B to Output -->
+                        <path id="path_5b_6" d="M 760 605 L 760 628 L 460 628" stroke="#475569" stroke-width="2.5" fill="none" />
+
+                        <!-- Line 6 to 7 -->
+                        <path id="path_6_7" d="M 460 716 L 460 750" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                        <!-- BRANCH LABELS (FLOATING PILLS) -->
+                        <!-- Label Decision 1: YA -->
+                        <g id="lbl_d1_ya" transform="translate(460, 378)">
+                            <rect x="-42" y="-11" width="84" height="22" rx="11" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+                            <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#34d399" text-anchor="middle">[YA: BUKA]</text>
+                        </g>
+
+                        <!-- Label Decision 1: TIDAK (EDGE CASE) -->
+                        <g id="lbl_d1_tidak" transform="translate(695, 269)">
+                            <rect x="-50" y="-11" width="100" height="22" rx="11" fill="#881337" stroke="#f43f5e" stroke-width="1.5"/>
+                            <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#fda4af" text-anchor="middle">[TIDAK: TUTUP]</text>
+                        </g>
+
+                        <!-- Label Decision 2: YA -->
+                        <g id="lbl_d2_ya" transform="translate(225, 465)">
+                            <rect x="-46" y="-11" width="92" height="22" rx="11" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+                            <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#34d399" text-anchor="middle">[YA: Q1 ≤ Q2]</text>
+                        </g>
+
+                        <!-- Label Decision 2: TIDAK -->
+                        <g id="lbl_d2_tidak" transform="translate(695, 465)">
+                            <rect x="-50" y="-11" width="100" height="22" rx="11" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+                            <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#fde68a" text-anchor="middle">[TIDAK: Q1 > Q2]</text>
+                        </g>
+
+                        <!-- FLOWCHART NODES -->
+
+                        <!-- NODE 1: TERMINATOR MULAI -->
+                        <g id="fc_node_1" class="fc-node transition-all duration-300">
+                            <rect x="350" y="15" width="220" height="54" rx="27" ry="27" fill="#0f172a" stroke="#10b981" stroke-width="2.5" class="fc-shape" />
+                            <text x="460" y="36" font-size="9.5" font-family="monospace" font-weight="900" fill="#34d399" text-anchor="middle" letter-spacing="1">● TERMINATOR</text>
+                            <text x="460" y="54" font-size="13.5" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">MULAI (START)</text>
+                        </g>
+
+                        <!-- NODE 2: INPUT / OUTPUT (JAJARGENJANG / PARALLELOGRAM) -->
+                        <g id="fc_node_2" class="fc-node transition-all duration-300">
+                            <polygon points="290,105 650,105 628,177 268,177" fill="#0f172a" stroke="#0ea5e9" stroke-width="2.5" class="fc-shape" />
+                            <text x="460" y="126" font-size="9.5" font-family="monospace" font-weight="900" fill="#38bdf8" text-anchor="middle" letter-spacing="1">▱ INPUT DATA</text>
+                            <text x="460" y="146" font-size="12" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">BACA: antrean1, antrean2, status_k1</text>
+                            <text x="460" y="165" font-size="11" font-family="monospace" font-weight="bold" fill="#bae6fd" text-anchor="middle" id="fc_val_input">Q1 = 4  |  Q2 = 2  |  Kasir 1: BUKA</text>
+                        </g>
+
+                        <!-- NODE 3: DECISION 1 (BELAH KETUPAT / DIAMOND) -->
+                        <g id="fc_node_3" class="fc-node transition-all duration-300">
+                            <polygon points="460,218 625,280 460,342 295,280" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5" class="fc-shape" />
+                            <text x="460" y="262" font-size="9.5" font-family="monospace" font-weight="900" fill="#fbbf24" text-anchor="middle" letter-spacing="1">◇ DECISION 1</text>
+                            <text x="460" y="282" font-size="13" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">Kasir 1 BUKA?</text>
+                            <text x="460" y="302" font-size="11" font-family="monospace" font-weight="bold" fill="#fde68a" text-anchor="middle" id="fc_val_dec1">[ Status: BUKA ]</text>
+                        </g>
+
+                        <!-- NODE 4: DECISION 2 (BELAH KETUPAT / DIAMOND) -->
+                        <g id="fc_node_4" class="fc-node transition-all duration-300">
+                            <polygon points="460,414 625,476 460,538 295,476" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5" class="fc-shape" />
+                            <text x="460" y="458" font-size="9.5" font-family="monospace" font-weight="900" fill="#fbbf24" text-anchor="middle" letter-spacing="1">◇ DECISION 2</text>
+                            <text x="460" y="478" font-size="13" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">antrean1 ≤ antrean2 ?</text>
+                            <text x="460" y="498" font-size="11" font-family="monospace" font-weight="bold" fill="#fde68a" text-anchor="middle" id="fc_val_dec2">[ 4 ≤ 2 ? FALSE ]</text>
+                        </g>
+
+                        <!-- NODE 5A: PROSES A (PERSEGI PANJANG / RECTANGLE) -->
+                        <g id="fc_node_5a" class="fc-node transition-all duration-300">
+                            <rect x="45" y="535" width="230" height="70" rx="10" ry="10" fill="#0f172a" stroke="#6366f1" stroke-width="2.5" class="fc-shape" />
+                            <text x="160" y="556" font-size="9.5" font-family="monospace" font-weight="900" fill="#818cf8" text-anchor="middle" letter-spacing="1">▭ PROSES A</text>
+                            <text x="160" y="576" font-size="13" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">tujuan = "Kasir 1"</text>
+                            <text x="160" y="593" font-size="10" font-family="sans-serif" fill="#c7d2fe" text-anchor="middle">(Antrean Lebih Pendek/Sama)</text>
+                        </g>
+
+                        <!-- NODE 5B: PROSES B (PERSEGI PANJANG / RECTANGLE) -->
+                        <g id="fc_node_5b" class="fc-node transition-all duration-300">
+                            <rect x="645" y="535" width="230" height="70" rx="10" ry="10" fill="#0f172a" stroke="#6366f1" stroke-width="2.5" class="fc-shape" />
+                            <text x="760" y="556" font-size="9.5" font-family="monospace" font-weight="900" fill="#818cf8" text-anchor="middle" letter-spacing="1">▭ PROSES B</text>
+                            <text x="760" y="576" font-size="13" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">tujuan = "Kasir 2"</text>
+                            <text x="760" y="593" font-size="10" font-family="sans-serif" fill="#c7d2fe" text-anchor="middle" id="fc_proc_b_reason">(Kasir 1 Tutup / Q2 Singkat)</text>
+                        </g>
+
+                        <!-- NODE 6: OUTPUT HASIL (JAJARGENJANG / PARALLELOGRAM) -->
+                        <g id="fc_node_6" class="fc-node transition-all duration-300">
+                            <polygon points="270,642 670,642 648,716 248,716" fill="#0f172a" stroke="#0ea5e9" stroke-width="2.5" class="fc-shape" />
+                            <text x="460" y="663" font-size="9.5" font-family="monospace" font-weight="900" fill="#38bdf8" text-anchor="middle" letter-spacing="1">▱ OUTPUT KEPUTUSAN</text>
+                            <text x="460" y="683" font-size="13" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle" id="fc_val_output">CETAK: Arahkan ke Kasir X</text>
+                            <text x="460" y="702" font-size="10.5" font-family="sans-serif" fill="#bae6fd" text-anchor="middle" id="fc_val_outdesc">Instruksi hasil evaluasi algoritma</text>
+                        </g>
+
+                        <!-- NODE 7: TERMINATOR SELESAI -->
+                        <g id="fc_node_7" class="fc-node transition-all duration-300">
+                            <rect x="350" y="750" width="220" height="54" rx="27" ry="27" fill="#0f172a" stroke="#10b981" stroke-width="2.5" class="fc-shape" />
+                            <text x="460" y="771" font-size="9.5" font-family="monospace" font-weight="900" fill="#34d399" text-anchor="middle" letter-spacing="1">● TERMINATOR</text>
+                            <text x="460" y="789" font-size="13.5" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">SELESAI (END)</text>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- 6. TABEL REKAM UJI TELUSUR (TRACE TABLE) -->
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <h4 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                            <i data-lucide="table" class="w-4 h-4 text-indigo-600"></i>
+                            <span>Tabel Rekam Uji Telusur (Trace Table Matrix)</span>
+                        </h4>
+                        <p class="text-xs text-slate-500 mt-0.5">Merekam status memori variabel dan evaluasi percabangan logika setiap kali langkah dieksekusi.</p>
+                    </div>
+                    <button type="button" onclick="clearTraceTable()" class="text-xs font-bold text-slate-500 hover:text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl transition">
+                        Bersihkan Tabel
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs font-mono">
+                        <thead class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                            <tr>
+                                <th class="py-3 px-4 w-12 text-center">No</th>
+                                <th class="py-3 px-4">Bentuk Simbol</th>
+                                <th class="py-3 px-4">Blok Instruksi</th>
+                                <th class="py-3 px-4">Nilai Variabel di Memori</th>
+                                <th class="py-3 px-4">Evaluasi Logika</th>
+                                <th class="py-3 px-4">Keluaran / Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="traceTableBody" class="divide-y divide-slate-100 text-slate-700">
+                            <tr>
+                                <td colspan="6" class="py-6 text-center text-slate-400 italic font-sans text-xs">
+                                    Tekan tombol <strong>"Putar Animasi Flowchart"</strong> atau <strong>"Langkah Berikutnya"</strong> untuk merekam langkah telusur ke tabel.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 7. Kotak Penjelasan Pedagogis (Deep Learning Insight) -->
+            <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm space-y-3">
+                <div class="flex items-center space-x-2 text-indigo-700 font-bold text-xs uppercase tracking-wider">
+                    <div class="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center">
+                        <i data-lucide="lightbulb" class="w-4 h-4 text-indigo-600"></i>
+                    </div>
+                    <span>Pelajaran Berpikir Komputasional: Mengapa Menggunakan Flowchart & Simbol Berbeda?</span>
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-700 leading-relaxed bg-indigo-50/40 p-4 rounded-2xl border border-indigo-100">
+                    Dalam berpikir komputasional, <strong>Flowchart</strong> adalah representasi grafis algoritma yang menggunakan konvensi simbol geometris standar internasional. Simbol <strong>Belah Ketupat (Decision)</strong> merupakan titik krusial di mana komputer mengevaluasi kondisi Boolean (<code>True</code> / <code>False</code>). Dengan melakukan <strong>Dry-Run (Uji Telusur)</strong> manual, programmer dapat mendeteksi celah kesalahan (<em>bug</em>) dan kasus batas (<em>edge cases</em>) sebelum menulis ribuan baris kode program.
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-[11px]">
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-0.5">🌱 Berkeadaban</span>
+                        <span class="text-slate-500">Algoritma yang adil mengarahkan antrean tanpa pilih kasih dan menghargai waktu istirahat siswa.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-0.5">💡 Bermakna</span>
+                        <span class="text-slate-500">Menghubungkan logika percabangan matematika dengan situasi nyata operasional kantin sekolah.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <span class="font-bold text-slate-800 block mb-0.5">✨ Menggembirakan</span>
+                        <span class="text-slate-500">Melihat aliran algoritma bergerak hidup dengan animasi warna-warni yang mudah dipahami.</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        {% endif %}
+
+        <!-- Form Konfirmasi Selesai Simulasi & Lanjut ke LKPD -->
+        <div class="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div>
+                <h4 class="font-bold text-emerald-950 text-base">Selesai Menjelajahi Lab Simulasi?</h4>
+                <p class="text-xs text-emerald-800 mt-0.5">Simpan capaian simulasi Anda ke sistem dan lanjutkan pengerjaan Lembar Kerja Peserta Didik (LKPD).</p>
+            </div>
+
+            {% if user.role == 'siswa' %}
+            <form method="POST" action="/siswa/simulasi/selesai/{{ lesson.interactive_type }}" class="shrink-0">
+                <input type="hidden" name="lesson_id" value="{{ lesson.id }}">
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow transition flex items-center space-x-2">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    <span>Tandai Selesai Simulasi & Lanjut ke LKPD</span>
+                </button>
+            </form>
+            {% else %}
+            <button type="button" onclick="switchSubTab('lkpd')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow transition flex items-center space-x-2">
+                <span>Lanjut ke Pratinjau Tugas LKPD</span>
+                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+            </button>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3 CONTENT: LEMBAR KERJA PESERTA DIDIK (LKPD) KELOMPOK                 -->
+    <!-- ========================================================================= -->
+    <div id="panelTabLkpd" class="subtab-panel space-y-6 hidden">
+
+        {% if lesson.meeting_number == 3 %}
+        <!-- ========================================================================= -->
+        <!-- LKPD 3: DESAIN ALGORITMA & UJI TELUSUR (DRY RUN) - STUDI KASUS DISKON     -->
+        <!-- ========================================================================= -->
+
+        <!-- Header Card & Skenario Studi Kasus -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-indigo-100 text-indigo-800 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                            Sub-Materi 3 • Tugas Kelompok Interaktif
+                        </span>
+                        <span class="bg-amber-100 text-amber-900 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                            2 Bagian Soal (Drag & Drop)
+                        </span>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                        LKPD 3: Desain Algoritma & Uji Telusur (Dry Run) Kasir Diskon Belanja
+                    </h2>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Format Penilaian</span>
+                    <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Evaluasi Otomatis + Review Guru</span>
+                </div>
+            </div>
+
+            <!-- Skenario Studi Kasus -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white space-y-4 border border-indigo-900 shadow-lg">
+                <div class="flex items-center space-x-2 text-amber-400 font-bold text-xs uppercase tracking-wider">
+                    <i data-lucide="store" class="w-4 h-4"></i>
+                    <span>Studi Kasus Autentik: Sistem Kasir Diskon Total Belanja</span>
+                </div>
+
+                <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                    Minimarket Sekolah sedang merancang sistem kasir otomatis untuk menghitung diskon dan total pembayaran belanjaan pelanggan secara digital. Sebagai tim analis informatika, kelompokmu diminta menyusun <strong>Algoritma</strong> dan <strong>Diagram Alir (Flowchart)</strong> berdasarkan ketentuan aturan bisnis berikut:
+                </p>
+
+                <!-- 3 Business Rule Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+                    <!-- Rule 1: Belanja > 1 Juta -->
+                    <div class="bg-slate-800/80 p-4 rounded-2xl border border-indigo-500/40 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-amber-300">Aturan 1 (Belanja Tinggi)</span>
+                            <span class="bg-amber-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full">10% / 15%</span>
+                        </div>
+                        <div class="text-xs text-white font-bold">&gt; Rp 1.000.000</div>
+                        <p class="text-[11px] text-slate-300 leading-snug">
+                            Mendapatkan diskon dasar <strong>10%</strong>. Jika pelanggan adalah <strong>MEMBER</strong>, diskon ditambah <strong>5%</strong> (Total Diskon menjadi <strong>15%</strong>).
+                        </p>
+                    </div>
+
+                    <!-- Rule 2: Belanja > 500 Ribu -->
+                    <div class="bg-slate-800/80 p-4 rounded-2xl border border-sky-500/40 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-sky-300">Aturan 2 (Belanja Sedang)</span>
+                            <span class="bg-sky-500 text-slate-950 font-black text-[10px] px-2 py-0.5 rounded-full">5%</span>
+                        </div>
+                        <div class="text-xs text-white font-bold">&gt; Rp 500.000 s/d Rp 1.000.000</div>
+                        <p class="text-[11px] text-slate-300 leading-snug">
+                            Mendapatkan diskon sebesar <strong>5%</strong> (tidak ada tambahan member untuk kategori ini).
+                        </p>
+                    </div>
+
+                    <!-- Rule 3: Belanja <= 500 Ribu -->
+                    <div class="bg-slate-800/80 p-4 rounded-2xl border border-slate-600/40 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-slate-400">Aturan 3 (Belanja Reguler)</span>
+                            <span class="bg-slate-600 text-white font-black text-[10px] px-2 py-0.5 rounded-full">0%</span>
+                        </div>
+                        <div class="text-xs text-white font-bold">&le; Rp 500.000</div>
+                        <p class="text-[11px] text-slate-300 leading-snug">
+                            Tidak mendapatkan diskon (<strong>Diskon 0%</strong>). Pelanggan membayar penuh sesuai total belanja.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="text-[11px] text-slate-400 bg-slate-950/70 p-3 rounded-xl border border-slate-800 font-mono">
+                    💡 Rumus Kasir: <code>potongan = total_belanja * (diskon / 100)</code> &bull; <code>total_bayar = total_belanja - potongan</code>
+                </div>
+            </div>
+
+            <!-- Existing Submission Status (Jika Sudah Mengumpulkan) -->
+            {% if submission %}
+            <div class="p-5 rounded-2xl border {% if submission.status == 'graded' %}bg-emerald-50/70 border-emerald-200{% else %}bg-amber-50/70 border-amber-200{% endif %} space-y-3">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="{% if submission.status == 'graded' %}check-circle-2{% else %}clock{% endif %}" class="w-5 h-5 {% if submission.status == 'graded' %}text-emerald-600{% else %}text-amber-600{% endif %}"></i>
+                        <span class="font-bold text-xs {% if submission.status == 'graded' %}text-emerald-950{% else %}text-amber-950{% endif %}">
+                            {% if submission.status == 'graded' %}
+                                LKPD Telah Diperiksa & Dinilai oleh Guru
+                            {% else %}
+                                Laporan LKPD 3 Telah Dikirimkan ke Guru (Menunggu Penilaian)
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    {% if submission.status == 'graded' %}
+                    <div class="bg-emerald-600 text-white font-mono font-black text-sm px-3 py-1 rounded-xl shadow-sm">
+                        Nilai: {{ submission.score }} / 100
+                    </div>
+                    {% else %}
+                    <span class="text-[11px] text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full font-semibold">
+                        Terkumpul: {{ submission.submitted_at }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                {% if submission.feedback %}
+                <div class="bg-white p-3.5 rounded-xl border border-emerald-200 text-xs">
+                    <span class="font-bold text-emerald-900 block mb-0.5">Catatan & Umpan Balik Guru:</span>
+                    <p class="text-slate-700 italic">"{{ submission.feedback }}"</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- BAGIAN 1: MENYUSUN TAHAPAN ALGORITMA (DRAG & DROP)                        -->
+        <!-- ========================================================================= -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center">
+                        1
+                    </span>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">
+                            Bagian 1: Desain Urutan Tahapan Algoritma
+                        </h3>
+                        <p class="text-xs text-slate-500">Soal tipe drag-and-drop: Susun tahapan secara runtut dari Langkah 1 s/d 10</p>
+                    </div>
+                </div>
+                <span class="text-[11px] text-indigo-600 font-mono bg-indigo-50 px-2.5 py-1 rounded-lg font-bold">
+                    Tipe: Drag & Drop Reordering
+                </span>
+            </div>
+
+            <!-- Petunjuk Pengerjaan Bagian 1 -->
+            <div class="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100 text-xs text-indigo-950 flex items-start space-x-2">
+                <i data-lucide="info" class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5"></i>
+                <div class="leading-relaxed">
+                    <strong>Petunjuk:</strong> Geser kartu di bawah ini untuk mengurutkan tahapan algoritma diskon belanja dari awal hingga akhir. Anda juga dapat menggunakan tombol panah <strong>▲ (naik)</strong> dan <strong>▼ (turun)</strong>. Setelah tersusun, klik tombol <strong>"Periksa Susunan Algoritma"</strong> untuk mengecek kebenaran jawaban Anda, lalu klik <strong>"Kirim Bagian 1 ke Guru"</strong>.
+                </div>
+            </div>
+
+            <!-- List Container Draggable -->
+            <div id="lkpd3_steps_list" class="space-y-2.5">
+                <!-- Di-render oleh lkpd3_interactive.js -->
+            </div>
+
+            <!-- Feedback Banner Bagian 1 -->
+            <div id="lkpd3_part1_feedback" class="hidden"></div>
+
+            <!-- Toolbar Aksi Bagian 1 -->
+            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <button type="button" onclick="lkpd3_shufflePart1()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center space-x-1.5">
+                    <i data-lucide="shuffle" class="w-4 h-4 text-slate-500"></i>
+                    <span>Acak Ulang Urutan</span>
+                </button>
+
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="lkpd3_checkPart1()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow transition flex items-center space-x-1.5">
+                        <i data-lucide="check-square" class="w-4 h-4"></i>
+                        <span>🔍 Periksa Susunan Algoritma</span>
+                    </button>
+
+                    <button type="button" id="btn_submit_part1" onclick="lkpd3_submitPart1()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow transition flex items-center space-x-1.5">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>📤 Kirim Bagian 1 ke Guru</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- BAGIAN 2: MENYUSUN FLOWCHART & DRY-RUN EXECUTION (DRAG & DROP SIMBOL)      -->
+        <!-- ========================================================================= -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 font-black text-sm flex items-center justify-center">
+                        2
+                    </span>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">
+                            Bagian 2: Desain Susunan Flowchart (Simbol Standar & Alur Percabangan)
+                        </h3>
+                        <p class="text-xs text-slate-500">Soal tipe drag-and-drop: Pasangkan simbol dan logika yang sesuai pada slot diagram alir</p>
+                    </div>
+                </div>
+                <span class="text-[11px] text-amber-700 font-mono bg-amber-50 px-2.5 py-1 rounded-lg font-bold">
+                    Tipe: Flowchart Builder + Dry-Run
+                </span>
+            </div>
+
+            <!-- Petunjuk Pengerjaan Bagian 2 -->
+            <div class="bg-amber-50/60 p-4 rounded-2xl border border-amber-200 text-xs text-amber-950 flex items-start space-x-2">
+                <i data-lucide="info" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+                <div class="leading-relaxed">
+                    <strong>Petunjuk:</strong> Cocokkan simbol standar berikut ke dalam slot diagram alir yang tepat. Anda dapat <strong>mengklik simbol pada palet lalu mengklik slot tujuan</strong>, atau <strong>men-drag</strong> simbol langsung ke slot kanvas. Setelah selesai, klik tombol <strong>"⚡ Eksekusi / Periksa Flowchart"</strong> untuk menjalankan simulasi uji telusur otomatis 4 kasus belanja, lalu klik <strong>"Kirim Bagian 2 ke Guru"</strong>.
+                </div>
+            </div>
+
+            <!-- Palet Simbol Standar Flowchart -->
+            <div class="space-y-3 bg-slate-900/60 p-4 sm:p-5 rounded-3xl border border-slate-800">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+                    <div class="space-y-0.5">
+                        <span class="text-xs font-bold text-white uppercase tracking-wider flex items-center space-x-2">
+                            <i data-lucide="shapes" class="w-4 h-4 text-amber-400"></i>
+                            <span>Palet Pilihan Simbol Standar Flowchart (Bentuk Geometri):</span>
+                        </span>
+                        <p class="text-[11px] text-slate-400">
+                            Simbol ditampilkan langsung dalam bentuk fisik geometrinya: <strong>Oval</strong> (Terminator), <strong>Jajargenjang</strong> (I/O), <strong>Belah Ketupat</strong> (Decision), atau <strong>Persegi Panjang</strong> (Proses).
+                        </p>
+                    </div>
+                    <div id="lkpd3_palette_filters" class="flex flex-wrap gap-1.5">
+                        <!-- Di-render oleh lkpd3_interactive.js -->
+                    </div>
+                </div>
+
+                <!-- Petunjuk Interaksi Ramah HP & Laptop -->
+                <div class="text-[11px] text-amber-300 bg-amber-950/50 border border-amber-500/40 px-3.5 py-2.5 rounded-2xl flex items-center justify-between flex-wrap gap-2 shadow-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-base">📱</span>
+                        <span><strong>Ramah Pengguna HP / Layar Sentuh:</strong> Cukup <strong>ketuk (*tap*) slot</strong> pada diagram alir di bawah untuk memunculkan jendela pilihan simbol!</span>
+                    </div>
+                    <span class="text-[10px] text-indigo-300 bg-indigo-950/80 px-2 py-0.5 rounded-full border border-indigo-500/40 font-mono font-bold">
+                        Dual-Mode: Tap Picker & Drag-Drop
+                    </span>
+                </div>
+
+                <div id="lkpd3_symbols_palette" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pt-1">
+                    <!-- Di-render oleh lkpd3_interactive.js -->
+                </div>
+            </div>
+
+            <!-- Kanvas Diagram Alir (Flowchart Slots Layout) -->
+            <div class="bg-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-slate-800 space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-800 pb-3 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        <span class="font-mono text-amber-400 font-bold">Kanvas Diagram Alir: Algoritma Diskon Belanja Kasir</span>
+                    </div>
+                    <span class="text-slate-400 font-mono text-[11px]">12 Slot Terstruktur</span>
+                </div>
+
+                <!-- Diagram Flow Stack -->
+                <div class="max-w-3xl mx-auto space-y-4">
+                    
+                    <!-- Slot 1: Mulai -->
+                    <div class="max-w-xs mx-auto">
+                        <div id="slot_box_slot1"></div>
+                    </div>
+
+                    <!-- Flow Down Arrow -->
+                    <div class="text-center text-slate-500 font-bold text-xs flex justify-center">
+                        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">↓ alur eksekusi</span>
+                    </div>
+
+                    <!-- Slot 2: Input -->
+                    <div class="max-w-md mx-auto">
+                        <div id="slot_box_slot2"></div>
+                    </div>
+
+                    <!-- Flow Down Arrow -->
+                    <div class="text-center text-slate-500 font-bold text-xs flex justify-center">
+                        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">↓ alur eksekusi</span>
+                    </div>
+
+                    <!-- Slot 3: Decision 1 (total_belanja > 1.000.000) -->
+                    <div class="max-w-lg mx-auto">
+                        <div id="slot_box_slot3"></div>
+                    </div>
+
+                    <!-- 2-Branch Split Indicator -->
+                    <div class="grid grid-cols-2 gap-4 text-xs font-mono font-bold">
+                        <div class="text-left text-emerald-400 flex items-center space-x-1 pl-4">
+                            <span class="bg-emerald-950 px-2.5 py-0.5 rounded-full border border-emerald-500">[YA: Belanja &gt; 1 Juta] ↙</span>
+                        </div>
+                        <div class="text-right text-rose-400 flex items-center justify-end space-x-1 pr-4">
+                            <span class="bg-rose-950 px-2.5 py-0.5 rounded-full border border-rose-500">↘ [TIDAK: Belanja &le; 1 Juta]</span>
+                        </div>
+                    </div>
+
+                    <!-- Sub-Branches Container -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t border-slate-800/80">
+                        
+                        <!-- Left Sub-Branch: Member Check -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-emerald-900/50 space-y-3">
+                            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wide block">Cabang YA (Kategori Belanja &gt; 1 Juta):</span>
+                            
+                            <!-- Slot 4: Decision Member -->
+                            <div id="slot_box_slot4"></div>
+
+                            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono font-bold pt-1">
+                                <span class="text-emerald-400 text-center">[YA: Member] ↓</span>
+                                <span class="text-amber-400 text-center">[TIDAK] ↓</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <!-- Slot 5: Diskon 15% -->
+                                <div id="slot_box_slot5"></div>
+                                <!-- Slot 6: Diskon 10% -->
+                                <div id="slot_box_slot6"></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Sub-Branch: 500k Check -->
+                        <div class="p-4 rounded-2xl bg-slate-900/60 border border-sky-900/50 space-y-3">
+                            <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wide block">Cabang TIDAK (Kategori Belanja &le; 1 Juta):</span>
+                            
+                            <!-- Slot 7: Decision 500k -->
+                            <div id="slot_box_slot7"></div>
+
+                            <div class="grid grid-cols-2 gap-2 text-[10px] font-mono font-bold pt-1">
+                                <span class="text-sky-400 text-center">[YA: &gt; 500k] ↓</span>
+                                <span class="text-slate-400 text-center">[TIDAK: &le; 500k] ↓</span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <!-- Slot 8: Diskon 5% -->
+                                <div id="slot_box_slot8"></div>
+                                <!-- Slot 9: Diskon 0% -->
+                                <div id="slot_box_slot9"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Merge Flow Down Arrow -->
+                    <div class="text-center text-slate-500 font-bold text-xs flex justify-center pt-2">
+                        <span class="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-indigo-300">
+                            ↓ Penyatuan Seluruh Jalur Cabang Menuju Perhitungan Kasir
+                        </span>
+                    </div>
+
+                    <!-- Slot 10: Proses Hitung -->
+                    <div class="max-w-xl mx-auto">
+                        <div id="slot_box_slot10"></div>
+                    </div>
+
+                    <!-- Flow Down Arrow -->
+                    <div class="text-center text-slate-500 font-bold text-xs flex justify-center">
+                        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">↓</span>
+                    </div>
+
+                    <!-- Slot 11: Output Cetak -->
+                    <div class="max-w-md mx-auto">
+                        <div id="slot_box_slot11"></div>
+                    </div>
+
+                    <!-- Flow Down Arrow -->
+                    <div class="text-center text-slate-500 font-bold text-xs flex justify-center">
+                        <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800">↓</span>
+                    </div>
+
+                    <!-- Slot 12: Selesai -->
+                    <div class="max-w-xs mx-auto">
+                        <div id="slot_box_slot12"></div>
+                    </div>
+
+                </div>
+
+                <!-- Feedback Banner Bagian 2 -->
+                <div id="lkpd3_part2_feedback" class="hidden"></div>
+
+                <!-- Tabel Hasil Uji Telusur (Dry Run Matrix) -->
+                <div id="lkpd3_dryrun_matrix" class="hidden bg-slate-900 rounded-2xl p-5 border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="table" class="w-4 h-4 text-amber-400"></i>
+                            <span class="font-bold text-xs text-white uppercase tracking-wider font-mono">Hasil Uji Telusur 4 Kasus Nyata (Dry-Run Engine):</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400">Otomatisasi Uji Logika</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="text-[11px] text-slate-400 border-b border-slate-800 font-mono">
+                                <tr>
+                                    <th class="py-2 px-3 text-center">No</th>
+                                    <th class="py-2 px-3">Kasus Uji Data Belanja</th>
+                                    <th class="py-2 px-3 text-center">Diskon Evaluasi</th>
+                                    <th class="py-2 px-3 text-right">Potongan Harga</th>
+                                    <th class="py-2 px-3 text-right">Total Bayar</th>
+                                    <th class="py-2 px-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lkpd3_dryrun_tbody">
+                                <!-- Di-render oleh lkpd3_interactive.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Toolbar Aksi Bagian 2 -->
+                <div class="pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="lkpd3_resetSlots()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-xl transition flex items-center space-x-1.5">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            <span>Reset Kanvas</span>
+                        </button>
+                        {% if user.role == 'guru' %}
+                        <button type="button" onclick="lkpd3_autofillFlowchartDemo()" class="text-xs text-amber-400 hover:text-amber-300 font-bold underline px-2 py-1 flex items-center space-x-1" title="Khusus Akun Guru">
+                            <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                            <span>(Kunci Valid Flowchart - Khusus Guru)</span>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="lkpd3_checkPart2()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs py-2.5 px-5 rounded-xl shadow-lg transition flex items-center space-x-1.5">
+                            <i data-lucide="play" class="w-4 h-4"></i>
+                            <span>⚡ Eksekusi / Periksa Flowchart</span>
+                        </button>
+
+                        <button type="button" id="btn_submit_part2" onclick="lkpd3_submitPart2()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow transition flex items-center space-x-1.5">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>📤 Kirim Bagian 2 ke Guru</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ========================================================================= -->
+        <!-- FORMULIR PENGIRIMAN LENGKAP LKPD 3 KE GURU                                -->
+        <!-- ========================================================================= -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center space-x-2 text-indigo-700 font-bold text-sm uppercase tracking-wider border-b border-slate-100 pb-3">
+                <i data-lucide="check-circle" class="w-5 h-5"></i>
+                <span>Pengiriman Seluruh Laporan Lengkap LKPD 3 ke Guru</span>
+            </div>
+
+            {% if user.role == 'siswa' %}
+            <form method="POST" action="/siswa/modul/3/submit-lkpd" class="space-y-4 text-xs">
+                <input type="hidden" name="assignment_id" value="3">
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nama Anggota Kelompok & Peran:</label>
+                    <input type="text" id="lkpd3_group_members" name="group_members" required
+                           value="{{ submission.group_members if submission else '' }}"
+                           placeholder="Contoh: Ahmad Rizki (Ketua), Siti (Analisis Algoritma), Budi (Desain Flowchart), Rani (Tester)"
+                           class="w-full p-3 rounded-xl border border-slate-300 font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Catatan Tambahan & Refleksi Diskusi Kelompok:</label>
+                    <input type="text" id="lkpd3_additional_notes" 
+                           placeholder="Contoh: Kami berhasil menguji skenario batas belanja 1 juta dan kasus diskon member dengan telusur manual."
+                           class="w-full p-3 rounded-xl border border-slate-300 text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-xs">
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">
+                        Pratinjau Laporan Tugas LKPD 3 (Terisi Otomatis dari Bagian 1 & Bagian 2):
+                    </label>
+                    <textarea id="lkpd3_submission_text" name="submission_text" required rows="10"
+                              class="w-full p-3.5 rounded-xl border border-slate-300 font-mono text-[11px] text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 leading-relaxed">{{ submission.submission_text if submission else '' }}</textarea>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
+                    <span class="text-[11px] text-slate-500">
+                        Pengiriman laporan lengkap ini akan otomatis menyelesaikan checklist prasyarat Pertemuan 3.
+                    </span>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 px-6 rounded-xl transition shadow flex items-center space-x-2">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                        <span>🚀 Kirim Seluruh Laporan Lengkap LKPD 3 ke Guru</span>
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900">
+                Mode Guru: Anda dapat melihat dan memeriksa tugas siswa melalui menu <strong>Tugas LKPD</strong> di navigasi atas.
+            </div>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <!-- ========================================================================= -->
+        <!-- STANDARD LKPD FORM FOR PERTEMUAN 1 DAN 2                                  -->
+        <!-- ========================================================================= -->
+        <!-- LKPD Header Card -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                <div>
+                    <span class="bg-indigo-50 text-indigo-700 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                        Sub-Materi 3 • Tugas Kelompok
+                    </span>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                        {% if assignment %}
+                            {{ assignment.title }}
+                        {% else %}
+                            LKPD Pertemuan {{ lesson.meeting_number }}
+                        {% endif %}
+                    </h2>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Format Pengumpulan</span>
+                    <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-lg">Laporan Teks / Tautan Dokumen</span>
+                </div>
+            </div>
+
+            <!-- Assignment Description & Instructions -->
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200 text-xs sm:text-sm text-slate-700 space-y-2">
+                <h4 class="font-bold text-slate-900 flex items-center space-x-1.5">
+                    <i data-lucide="clipboard-list" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Petunjuk Pengerjaan LKPD:</span>
+                </h4>
+                <p class="leading-relaxed">
+                    {% if assignment %}
+                        {{ assignment.description }}
+                    {% else %}
+                        Diskusikan bersama kelompok Anda, rumuskan solusi pemecahan masalah sesuai studi kasus pertemuan ini, dan tuliskan laporannya pada formulir di bawah.
+                    {% endif %}
+                </p>
+                <div class="pt-2 text-[11px] text-slate-500 font-medium">
+                    📌 <em>Kriteria Penilaian:</em> Kejelasan perumusan masalah, ketepatan penerapan pilar berpikir komputasional, struktur dekomposisi/pseudocode yang logis, serta kerja sama tim.
+                </div>
+            </div>
+
+            <!-- Existing Submission Status (Jika Sudah Mengumpulkan) -->
+            {% if submission %}
+            <div class="p-5 rounded-2xl border {% if submission.status == 'graded' %}bg-emerald-50/70 border-emerald-200{% else %}bg-amber-50/70 border-amber-200{% endif %} space-y-3">
+                <div class="flex flex-wrap justify-between items-center gap-2">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="{% if submission.status == 'graded' %}check-circle-2{% else %}clock{% endif %}" class="w-5 h-5 {% if submission.status == 'graded' %}text-emerald-600{% else %}text-amber-600{% endif %}"></i>
+                        <span class="font-bold text-xs {% if submission.status == 'graded' %}text-emerald-950{% else %}text-amber-950{% endif %}">
+                            {% if submission.status == 'graded' %}
+                                LKPD Telah Diperiksa & Dinilai oleh Guru
+                            {% else %}
+                                Laporan LKPD Telah Dikirimkan (Menunggu Koreksi Guru)
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    {% if submission.status == 'graded' %}
+                    <div class="bg-emerald-600 text-white font-mono font-black text-sm px-3 py-1 rounded-xl shadow-sm">
+                        Nilai: {{ submission.score }} / 100
+                    </div>
+                    {% else %}
+                    <span class="text-[11px] text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full font-semibold">
+                        Terkumpul: {{ submission.submitted_at }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                {% if submission.feedback %}
+                <div class="bg-white p-3.5 rounded-xl border border-emerald-200 text-xs">
+                    <span class="font-bold text-emerald-900 block mb-0.5">Catatan & Umpan Balik Guru:</span>
+                    <p class="text-slate-700 italic">"{{ submission.feedback }}"</p>
+                </div>
+                {% endif %}
+
+                <!-- Preview Kiriman -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+                    <div>
+                        <span class="text-slate-400 block font-bold text-[10px] uppercase">Anggota Kelompok:</span>
+                        <span class="font-semibold text-slate-800">{{ submission.group_members }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block font-bold text-[10px] uppercase">Isi Kiriman / Solusi:</span>
+                        <div class="p-3 bg-slate-50 rounded-lg font-mono text-[11px] text-slate-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                            {{ submission.submission_text }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Submission Form -->
+            <div class="pt-4 border-t border-slate-100">
+                <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center space-x-2">
+                    <i data-lucide="edit-3" class="w-4 h-4 text-indigo-600"></i>
+                    <span>{% if submission %}Perbarui Pengumpulan Laporan LKPD{% else %}Formulir Pengumpulan Laporan LKPD{% endif %}</span>
+                </h3>
+
+                {% if user.role == 'siswa' %}
+                <form method="POST" action="/siswa/modul/{{ lesson.id }}/submit-lkpd" class="space-y-4 text-xs">
+                    <input type="hidden" name="assignment_id" value="{{ assignment.id if assignment else lesson.meeting_number }}">
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nama Anggota Kelompok & Peran:</label>
+                        <input type="text" name="group_members" required 
+                               value="{{ submission.group_members if submission else '' }}"
+                               placeholder="Contoh: Rani (Ketua), Dimas (Notulis), Siti (Penyaji), Budi (Peneliti Data)" 
+                               class="w-full p-3 rounded-xl border border-slate-300 font-semibold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">
+                            Laporan Hasil Diskusi LKPD (Tuliskan Rumusan Masalah, Cabang Dekomposisi, Abstraksi, Pseudocode, atau Tautan Google Docs):
+                        </label>
+                        <textarea name="submission_text" required rows="8" 
+                                  placeholder="Tuliskan laporan tugas kelompok Anda di sini...&#10;&#10;Contoh format laporan:&#10;1. Rumusan Masalah Autentik (5W1H): ...&#10;2. Hasil Dekomposisi Tingkat 1 & Tingkat 2: ...&#10;3. Data Penting vs Diabaikan: ...&#10;4. Langkah Algoritma Solusi: ...&#10;(Boleh juga menyertakan tautan Google Drive / Google Docs tugas kelompok Anda)" 
+                                  class="w-full p-3.5 rounded-xl border border-slate-300 font-mono text-xs text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500 bg-white leading-relaxed">{{ submission.submission_text if submission else '' }}</textarea>
+                    </div>
+
+                    <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
+                        <span class="text-[11px] text-slate-500">
+                            Pengumpulan ini otomatis menyelesaikan checklist LKPD Pertemuan {{ lesson.meeting_number }}.
+                        </span>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 px-6 rounded-xl transition shadow flex items-center space-x-2">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                            <span>{% if submission %}Simpan Pembaruan LKPD{% else %}Kirim Laporan LKPD ke Guru{% endif %}</span>
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div class="p-4 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900">
+                    Mode Guru: Anda dapat melihat tugas-tugas yang telah dikirimkan oleh siswa melalui menu <strong>Tugas LKPD</strong> di panel navigasi atas.
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4 CONTENT: KUIS & UJIAN EVALUASI                                      -->
+    <!-- ========================================================================= -->
+    <div id="panelTabEvaluasi" class="subtab-panel space-y-6 hidden">
+
+        <!-- EVALUASI UNTUK PERTEMUAN 1: KUIS FORMATIF SESI 1 -->
+        {% if lesson.meeting_number == 1 %}
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <div class="border-b border-slate-100 pb-4">
+                <span class="bg-purple-50 text-purple-700 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                    Sub-Materi 4 • Kuis Pemahaman Formatif
+                </span>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                    Kuis Latihan Sesi 1: Dekomposisi Masalah Kompleks
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Uji pemahaman konseptualmu mengenai cara memecah masalah besar menjadi sub-masalah tingkat 1 dan tingkat 2 yang logis dan operasional.
+                </p>
+            </div>
+
+            <!-- Quiz Attempt Status Card -->
+            {% if quiz_attempt %}
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shadow">
+                        ✓
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-emerald-700 tracking-wider block">Kuis Telah Selesai</span>
+                        <h4 class="font-bold text-slate-900 text-sm">Capaian Nilai Kuis Pertemuan 1</h4>
+                        <span class="text-xs text-emerald-800">
+                            Jawaban benar: {{ quiz_attempt.correct_answers }} dari {{ quiz_attempt.total_questions }} soal • Waktu: {{ quiz_attempt.completed_at }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <div class="text-right">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold block">Skor Kamu</span>
+                        <span class="font-black text-2xl text-emerald-700 font-mono">{{ quiz_attempt.score }}</span>
+                    </div>
+                    {% if quiz %}
+                    <a href="/siswa/kuis/{{ quiz.id }}" class="bg-white hover:bg-slate-50 text-indigo-700 font-bold text-xs px-4 py-2.5 rounded-xl border border-indigo-200 shadow-sm transition">
+                        Kerjakan Ulang
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-xl shadow">
+                        <i data-lucide="help-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-amber-700 tracking-wider block">Prasyarat Kelulusan Pertemuan 1</span>
+                        <h4 class="font-bold text-slate-900 text-sm">Kuis Pemahaman Formatif Sesi 1</h4>
+                        <span class="text-xs text-amber-800">
+                            Terdiri dari 5 soal pilihan ganda. Selesaikan kuis ini untuk menuntaskan Pertemuan 1 dan membuka akses ke Pertemuan 2!
+                        </span>
+                    </div>
+                </div>
+
+                {% if quiz %}
+                <a href="/siswa/kuis/{{ quiz.id }}" class="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow transition flex items-center space-x-2 shrink-0">
+                    <span>Mulai Kerjakan Kuis Sekarang</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Next Meeting Indicator -->
+            <div class="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
+                <span class="text-slate-500">
+                    💡 Setelah menyelesaikan kuis ini dan mengumpulkan LKPD, Pertemuan 2 otomatis terbuka di Beranda Belajar.
+                </span>
+                <a href="/siswa" class="text-indigo-600 hover:text-indigo-800 font-bold flex items-center space-x-1">
+                    <span>Kembali ke Beranda Belajar</span>
+                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- EVALUASI UNTUK PERTEMUAN 2: PEMANTAPAN POLA & ABSTRAKSI -->
+        {% if lesson.meeting_number == 2 %}
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <div class="border-b border-slate-100 pb-4">
+                <span class="bg-teal-50 text-teal-800 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                    Sub-Materi 4 • Pemantapan Pilar Berpikir Komputasional
+                </span>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                    Pemantapan Konsep: Pengenalan Pola & Abstraksi Data
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Evaluasi diri sebelum melangkah ke perancangan diagram alir algoritma pada Pertemuan 3.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <span class="font-bold text-teal-700 text-xs block">1. Pilar Pengenalan Pola (Pattern Recognition)</span>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Mengenali keteraturan bahwa lonjakan antrean selalu terjadi pada 5 menit pertama bel istirahat. Pola ini menjadi dasar penyusunan jadwal kasir ganda.
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                    <span class="font-bold text-indigo-700 text-xs block">2. Pilar Abstraksi Data (Abstraction)</span>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        Mengabaikan warna seragam, cuaca luar, atau merek sepatu. Fokus eksklusif pada variabel kunci: durasi transaksi kasir dan jumlah antrean murid.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Prerequisite Status for Meeting 3 -->
+            <div class="p-5 rounded-2xl {% if progression and progression.p2.completed %}bg-emerald-50 border border-emerald-200 text-emerald-950{% else %}bg-amber-50 border border-amber-200 text-amber-950{% endif %} flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h4 class="font-bold text-sm">
+                        {% if progression and progression.p2.completed %}
+                            🎉 Pertemuan 2 Tuntas! Pertemuan 3 Telah Terbuka
+                        {% else %}
+                            ⏳ Menyelesaikan Pertemuan 2
+                        {% endif %}
+                    </h4>
+                    <p class="text-xs mt-0.5">
+                        {% if progression and progression.p2.completed %}
+                            Kamu telah menyelesaikan Materi, Lab Simulasi Peta Abstraksi, dan LKPD 2. Siap lanjut ke perancangan algoritma!
+                        {% else %}
+                            Pastikan kamu telah mengumpulkan LKPD 2 di tab Sub-Materi 3 untuk membuka akses Pertemuan 3.
+                        {% endif %}
+                    </p>
+                </div>
+
+                {% if progression and progression.p2.completed %}
+                <a href="/siswa/modul/3" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-5 py-3 rounded-xl shadow transition flex items-center space-x-2 shrink-0">
+                    <span>Lanjut ke Pertemuan 3</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- EVALUASI UNTUK PERTEMUAN 3: UJIAN SUMATIF UNIT 1 & JURNAL REFLEKSI -->
+        {% if lesson.meeting_number == 3 %}
+        <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
+            <div class="border-b border-slate-100 pb-4">
+                <span class="bg-purple-100 text-purple-800 font-bold px-3 py-1 rounded-full text-[10px] uppercase">
+                    Sub-Materi 4 • Evaluasi Akhir Unit 1
+                </span>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 mt-2">
+                    Ujian Sumatif Unit 1 & Jurnal Refleksi Metakognisi
+                </h3>
+                <p class="text-xs text-slate-500 mt-1">
+                    Tahap penutup pembelajaran mendalam (*Deep Learning*): evaluasi 4 pilar berpikir komputasional dan kesadaran cara berpikir (*Mindful Learning*).
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                
+                <!-- Card 1: Ujian Sumatif -->
+                <div class="p-6 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-4">
+                    <div>
+                        <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">
+                            Evaluasi Sumatif
+                        </span>
+                        <h4 class="font-bold text-slate-900 text-base mt-2">Ujian 4 Pilar Berpikir Komputasional</h4>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Mencakup evaluasi dekomposisi, pengenalan pola, abstraksi, dan perancangan diagram alir (Flowchart) solusi.
+                        </p>
+                    </div>
+
+                    <div>
+                        {% if progression and progression.eval.exam_taken %}
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 flex justify-between items-center">
+                            <span>✓ Ujian Selesai Dikerjakan</span>
+                            <span class="text-base font-black font-mono">Nilai: {{ progression.eval.exam_score }}</span>
+                        </div>
+                        {% elif progression and progression.eval.unlocked %}
+                        <a href="/siswa/kuis/2" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-sm">
+                            <span>Mulai Kerjakan Ujian Sumatif</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </a>
+                        {% else %}
+                        <div class="p-3 bg-slate-200 text-slate-500 rounded-xl text-xs font-semibold text-center flex items-center justify-center space-x-1.5">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                            <span>Terkunci (Selesaikan LKPD 3 terlebih dahulu)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Card 2: Jurnal Refleksi -->
+                <div class="p-6 rounded-2xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-4">
+                    <div>
+                        <span class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2.5 py-0.5 rounded uppercase">
+                            Mindful Learning
+                        </span>
+                        <h4 class="font-bold text-slate-900 text-base mt-2">Jurnal Refleksi Metakognisi</h4>
+                        <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                            Refleksi 4 pertanyaan mendalam tentang hambatan yang dihadapi, strategi yang berhasil, dan cara berpikir yang berubah.
+                        </p>
+                    </div>
+
+                    <div>
+                        {% if progression and progression.eval.reflection_taken %}
+                        <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl text-xs font-bold text-purple-800 flex justify-between items-center">
+                            <span>✓ Jurnal Refleksi Tersimpan</span>
+                            <a href="/siswa/refleksi" class="underline text-indigo-700">Lihat Jawaban</a>
+                        </div>
+                        {% elif progression and progression.eval.unlocked %}
+                        <a href="/siswa/refleksi" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition flex items-center justify-center space-x-2 shadow-sm">
+                            <span>Isi Jurnal Refleksi Sekarang</span>
+                            <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        </a>
+                        {% else %}
+                        <div class="p-3 bg-slate-200 text-slate-500 rounded-xl text-xs font-semibold text-center flex items-center justify-center space-x-1.5">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                            <span>Terkunci (Selesaikan LKPD 3 terlebih dahulu)</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+
+
+<!-- ========================================================================= -->
+<!-- MODAL PICKER SIMBOL FLOWCHART (OPTIMASI KHUSUS HP & LAYAR SENTUH)         -->
+<!-- ========================================================================= -->
+<div id="modalSlotPicker" class="hidden fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm transition-opacity duration-200">
+    <div class="bg-slate-900 border border-slate-800 text-white w-full sm:max-w-2xl rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[88vh] sm:max-h-[82vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-6 duration-200">
+        
+        <!-- Mobile drag handle pill -->
+        <div class="w-12 h-1.5 rounded-full bg-slate-700 mx-auto my-2.5 sm:hidden shrink-0"></div>
+
+        <!-- Header -->
+        <div class="px-5 py-3.5 sm:py-4 border-b border-slate-800 flex items-start justify-between gap-3 shrink-0 bg-slate-950/60">
+            <div class="space-y-0.5">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    <h3 class="text-base sm:text-lg font-black text-white">Pilih Bentuk Simbol Flowchart</h3>
+                    <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded-full font-mono font-bold">Pilih Cepat</span>
+                </div>
+                <p class="text-xs text-amber-300 font-mono font-bold" id="slotPickerTargetTitle">
+                    🎯 Menempatkan ke: Slot ...
+                </p>
+            </div>
+            <button type="button" onclick="lkpd3_closeSlotPicker()" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white flex items-center justify-center text-sm font-bold transition shrink-0" title="Tutup">
+                ✕
+            </button>
+        </div>
+
+        <!-- Filter Shape Pills -->
+        <div class="px-4 py-2.5 bg-slate-950/80 border-b border-slate-800/80 flex flex-wrap gap-1.5 overflow-x-auto shrink-0 select-none" id="slot_picker_filter_pills">
+            <!-- Di-render oleh lkpd3_interactive.js -->
+        </div>
+
+        <!-- Symbols List (Scrollable) -->
+        <div class="p-4 overflow-y-auto flex-1 space-y-3">
+            <div class="text-[11px] text-slate-400 flex items-center justify-between">
+                <span>Ketuk salah satu simbol di bawah untuk langsung memasangnya:</span>
+                <span class="text-amber-400 font-bold font-mono" id="slotPickerCountInfo">12 Simbol Tersedia</span>
+            </div>
+            <div id="slot_picker_symbols_grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
+                <!-- Di-render oleh lkpd3_interactive.js -->
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-5 py-3 bg-slate-950 border-t border-slate-800 flex justify-between items-center text-xs shrink-0">
+            <span class="text-slate-400 text-[11px]">Bisa diganti atau dihapus kapan saja</span>
+            <button type="button" onclick="lkpd3_closeSlotPicker()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold transition">
+                Batal
+            </button>
+        </div>
+
+    </div>
+</div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/static/js/lkpd3_interactive.js"></script>
+<script>
+    // Tab switching controller
+    function switchSubTab(tabName) {
+        // Hide all panels
+        document.querySelectorAll('.subtab-panel').forEach(panel => {
+            panel.classList.add('hidden');
+        });
+
+        // Reset all button styles
+        document.querySelectorAll('.subtab-btn').forEach(btn => {
+            btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-sm');
+            btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+        });
+
+        // Show active panel
+        const activePanel = document.getElementById('panelTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+        if (activePanel) {
+            activePanel.classList.remove('hidden');
+        }
+
+        // Highlight active button
+        const activeBtn = document.getElementById('btnTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+        if (activeBtn) {
+            activeBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+            activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
+        }
+
+        // Sync with browser URL without reloading
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabName);
+        window.history.replaceState({}, '', url);
+
+        // Re-render icons if needed
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+
+        // Jika membuka tab LKPD, inisialisasi interaktif LKPD 3 jika modul 3
+        if (tabName === 'lkpd') {
+            if (typeof lkpd3_init === 'function') {
+                lkpd3_init();
+            }
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+    }
+
+    // ==========================================
+    // INTERACTIVE SIMULATOR CLIENT-SIDE SCRIPTS
+    // ==========================================
+    
+    // =========================================================================
+    // PERTEMUAN 1: DATA 3 SKENARIO AUTENTIK: CABANG + ALASAN MENGAPA DIBUAT + SUB LANGSUNG
+    // =========================================================================
+    const scenarios = {
+        kantin: {
+            name: "Antrean Panjang Kasir Kantin Sekolah",
+            tag: "Latar Belakang Kasus: Antrean Kantin Sekolah (Studi Kasus Rani & Dimas)",
+            desc: "Bel istirahat 20 menit berbunyi. Sebanyak 180 siswa SMA serempak menuju kantin. Antrean kasir mengular panjang hingga ke lorong kelas, membuat Rani dan Dimas kehabisan waktu istirahat dan belum sempat makan saat bel masuk berbunyi.",
+            goal: "Mengurangi waktu tunggu antrean dari 15 menit menjadi maksimal 3 menit per murid.",
+            rootTitle: "Mengurangi Waktu Tunggu Antrean Kasir Kantin dari 15 Menit Menjadi 3 Menit",
+            branches: [
+                {
+                    id: "A",
+                    letter: "A",
+                    title: "Pola & Waktu Kedatangan Murid",
+                    badge: "Dimensi 1: Waktu & Pola",
+                    why: "Karena antrean tidak datang merata, melainkan menumpuk serentak pada 5 menit pertama saat bel berbunyi. Tanpa membedah pola jam puncak dan menu terlaris, kasir tidak bisa mengantisipasi lonjakan.",
+                    colorBorder: "border-sky-500",
+                    colorBadge: "bg-sky-500/20 text-sky-300",
+                    colorTag: "bg-sky-600",
+                    subs: [
+                        { code: "A.1", text: "Mengukur lonjakan siswa pada menit ke-0 s.d 5 bel istirahat.", priority: false },
+                        { code: "A.2", text: "Mendata 3 menu makanan paling laris yang dipesan saat jam sibuk.", priority: false }
+                    ]
+                },
+                {
+                    id: "B",
+                    letter: "B",
+                    title: "Efisiensi Layanan & Transaksi Kasir",
+                    badge: "Dimensi 2: Layanan Kasir",
+                    why: "Karena meja kasir adalah titik kemacetan utama (bottleneck). Lama waktu transaksi uang tunai dan menghitung kembalian adalah variabel proses yang paling menentukan laju aliran antrean.",
+                    colorBorder: "border-indigo-500",
+                    colorBadge: "bg-indigo-500/20 text-indigo-300",
+                    colorTag: "bg-indigo-600",
+                    subs: [
+                        { code: "B.1", text: "Mengukur durasi transaksi uang tunai & kembalian per siswa (rata-rata 45 detik).", priority: true },
+                        { code: "B.2", text: "Menerapkan sistem menu paket harga bulat (misal Serba Rp 10.000) agar minim kembalian.", priority: true },
+                        { code: "B.3", text: "Membuka kasir kilat ekstra khusus uang pas di jam sibuk.", priority: false }
+                    ]
+                },
+                {
+                    id: "C",
+                    letter: "C",
+                    title: "Alur Fisik & Penataan Jalur Antrean",
+                    badge: "Dimensi 3: Tata Ruang",
+                    why: "Karena ruang fisik kantin terbatas. Murid yang mengantre, yang sedang melihat menu, dan yang membawa makanan panas sering saling bertabrakan jika alur masuk dan keluar tidak dipisahkan.",
+                    colorBorder: "border-teal-500",
+                    colorBadge: "bg-teal-500/20 text-teal-300",
+                    colorTag: "bg-teal-600",
+                    subs: [
+                        { code: "C.1", text: "Memisahkan jalur antrean pemesanan dengan jalur pengambilan makanan.", priority: false },
+                        { code: "C.2", text: "Memasang papan menu & harga 5 meter sebelum kasir agar murid sudah siap memutuskan pesanan.", priority: false }
+                    ]
+                }
+            ],
+            priorityTitle: "Akar Masalah Kunci: Transaksi Tunai dan Kembalian di Jam Puncak (Menit 0-5)",
+            priorityDesc: "Hasil uji dekomposisi menunjukkan bahwa 65% waktu terbuang saat kasir menghitung uang kembalian. Solusi prioritas kelompok difokuskan pada paket harga bulat (B.2) dan kasir uang pas (B.3) sebelum menata ruang fisik.",
+            pedagogy: [
+                "Langkah 1: Masalah didefinisikan secara kuantitatif: bukan hanya mengeluh 'kantin lambat', melainkan target terukur 'menurunkan antrean dari 15 menit ke 3 menit'.",
+                "Langkah 2: Cabang A dibuat untuk mengisolasi variabel kedatangan murid (kapan dan apa yang dicari). Sub-masalah A.1 & A.2 langsung disisipkan di bawahnya untuk menyelidiki data jam sibuk.",
+                "Langkah 3: Cabang B dibuat untuk membedah proses di meja kasir. Sub-masalah B.1, B.2, B.3 langsung disisipkan di bawahnya karena kecepatan kasir adalah variabel independen dari kedatangan murid.",
+                "Langkah 4: Cabang C dibuat untuk menata aliran fisik ruang. Sub-masalah C.1 & C.2 langsung disisipkan di bawahnya agar antrean tidak saling menghambat secara fisik.",
+                "Langkah 5: Seluruh graf terhubung utuh! Tim menemukan titik sumbatan terbesar (transaksi tunai kembalian pada Cabang B) sebagai target aksi prioritas!"
+            ]
+        },
+        sampah: {
+            name: "Penumpukan Sampah Kantin Sekolah Tidak Terpilah",
+            tag: "Latar Belakang Kasus: Pengelolaan Sampah Sekolah yang Menumpuk",
+            desc: "Seusai jam istirahat kedua, tempat sampah di lorong kelas dan kantin meluber. Plastik kresek, botol air mineral, dan sisa makanan tercampur baur sehingga kotor, menimbulkan aroma tidak sedap, dan menyulitkan petugas kebersihan.",
+            goal: "Mereduksi volume sampah plastik dan meningkatkan akurasi pemilahan organik vs anorganik dari 25% ke 80%.",
+            rootTitle: "Mereduksi Sampah Plastik & Menaikkan Kepatuhan Pemilahan Sampah Sekolah Menjadi 80%",
+            branches: [
+                {
+                    id: "A",
+                    letter: "A",
+                    title: "Sumber Timbunan & Produksi Sampah",
+                    badge: "Dimensi 1: Sumber Timbunan",
+                    why: "Karena untuk menghentikan banjir sampah, kita harus tahu keran utamanya: siapa yang memproduksi sampah terbesar (penjual vs siswa) dan apa jenis sampah dominan (plastik sekali pakai vs sisa makanan).",
+                    colorBorder: "border-emerald-500",
+                    colorBadge: "bg-emerald-500/20 text-emerald-300",
+                    colorTag: "bg-emerald-600",
+                    subs: [
+                        { code: "A.1", text: "Menghitung proporsi sampah kemasan plastik sekali pakai vs sisa makanan organik.", priority: false },
+                        { code: "A.2", text: "Mendata stan penjual kantin yang masih menggunakan kemasan kantong plastik berlebih.", priority: false }
+                    ]
+                },
+                {
+                    id: "B",
+                    letter: "B",
+                    title: "Sarana, Penempatan & Label Wadah Pilah",
+                    badge: "Dimensi 2: Wadah Sampah",
+                    why: "Karena siswa tidak bisa memilah jika wadahnya tidak ada, tidak terjangkau, atau labelnya pudar/membingungkan. Ketersediaan sarana visual adalah prasyarat keberhasilan.",
+                    colorBorder: "border-teal-500",
+                    colorBadge: "bg-teal-500/20 text-teal-300",
+                    colorTag: "bg-teal-600",
+                    subs: [
+                        { code: "B.1", text: "Memeriksa ketersediaan tempat sampah 3 warna (Organik, Anorganik, Residu) di tiap lorong kelas.", priority: false },
+                        { code: "B.2", text: "Mengganti label tulisan yang pudar dengan stiker visual gambar contoh sampah nyata.", priority: true }
+                    ]
+                },
+                {
+                    id: "C",
+                    letter: "C",
+                    title: "Regulasi, Budaya & Pengawasan Siswa",
+                    badge: "Dimensi 3: Budaya Sekolah",
+                    why: "Karena penyediaan tempat sampah saja tidak cukup jika tidak ada pembiasaan dan regulasi bersama. Siswa butuh insentif positif untuk mengurangi plastik sekali pakai dari hulu.",
+                    colorBorder: "border-indigo-500",
+                    colorBadge: "bg-indigo-500/20 text-indigo-300",
+                    colorTag: "bg-indigo-600",
+                    subs: [
+                        { code: "C.1", text: "Mengkampanyekan gerakan 'Bawa Tumbler & Wadah Makan Sendiri' berhadiah poin kebersihan kelas.", priority: true },
+                        { code: "C.2", text: "Menjadwalkan piket harian Duta Lingkungan di area kantin saat jam istirahat.", priority: false }
+                    ]
+                }
+            ],
+            priorityTitle: "Akar Masalah Kunci: Label Tong Sampah Membingungkan & Ketergantungan Wadah Sekali Pakai",
+            priorityDesc: "Siswa mau memilah tetapi ragu karena label tong hanya teks tanpa gambar. Solusi prioritas: stiker visual contoh nyata pada tong sampah (B.2) dan gerakan tumbler berhadiah poin (C.1).",
+            pedagogy: [
+                "Langkah 1: Masalah didefinisikan secara kuantitatif: bukan hanya 'sekolah kita jorok', melainkan target jelas 'meningkatkan pemilahan terpilah dari 25% ke 80%'.",
+                "Langkah 2: Cabang A dibuat untuk membedah hulu sampah (proporsi plastik vs makanan). Sub-masalah A.1 & A.2 langsung disisipkan di bawahnya.",
+                "Langkah 3: Cabang B dibuat untuk membedah fasilitas wadah. Sub-masalah B.1 & B.2 langsung disisipkan di bawahnya.",
+                "Langkah 4: Cabang C dibuat untuk mengkaji kebiasaan dan aturan siswa. Sub-masalah C.1 & C.2 langsung disisipkan di bawahnya.",
+                "Langkah 5: Tim menemukan akar masalah konkret: label visual dan pengurangan plastik di hulu!"
+            ]
+        },
+        piket: {
+            name: "Pelaksanaan Piket Kebersihan Kelas Sering Terabaikan",
+            tag: "Latar Belakang Kasus: Piket Kebersihan Kelas yang Sering Diabaikan",
+            desc: "Banyak regu piket kelas yang langsung pulang begitu bel akhir berbunyi. Papan tulis sering kotor saat guru jam pertama datang, kolong meja penuh bungkus jajanan, dan hanya 1 siswa rajin yang akhirnya mengerjakan sendirian.",
+            goal: "Memastikan 100% regu piket harian bekerja secara merata dan selesai dalam maksimal 12 menit.",
+            rootTitle: "Memastikan 100% Regu Piket Harian Bekerja Merata dan Selesai dalam 12 Menit",
+            branches: [
+                {
+                    id: "A",
+                    letter: "A",
+                    title: "Manajemen Waktu & Pembagian Peran Kerja",
+                    badge: "Dimensi 1: Manajemen Waktu",
+                    why: "Karena saat bel pulang berbunyi, siswa terburu-buru mengejar angkutan atau lelah. Jika pembagian peran tidak jelas sejak awal, mereka akan saling menunggu dan akhirnya kabur pulang.",
+                    colorBorder: "border-amber-500",
+                    colorBadge: "bg-amber-500/20 text-amber-300",
+                    colorTag: "bg-amber-600",
+                    subs: [
+                        { code: "A.1", text: "Membagi peran spesifik: 2 orang papan & meja guru, 2 orang sapu lantai, 1 orang buang sampah.", priority: true },
+                        { code: "A.2", text: "Menjadwalkan piket ringan 5 menit sebelum bel pagi dan piket tuntas saat bel pulang sekolah.", priority: false }
+                    ]
+                },
+                {
+                    id: "B",
+                    letter: "B",
+                    title: "Kelayakan Sarana & Penataan Alat Kebersihan",
+                    badge: "Dimensi 2: Sarana Alat",
+                    why: "Karena siswa sering beralasan tidak piket karena sapunya patah/rontok, kain pelnya bau/hilang, atau tidak ada tempat simpan yang rapi. Ketersediaan alat adalah faktor penentu eksekusi.",
+                    colorBorder: "border-orange-500",
+                    colorBadge: "bg-orange-500/20 text-orange-300",
+                    colorTag: "bg-orange-600",
+                    subs: [
+                        { code: "B.1", text: "Memeriksa kelayakan sapu (tidak rontok) dan kain pel yang bersih layak pakai.", priority: false },
+                        { code: "B.2", text: "Menyediakan lemari gantung di belakang kelas agar alat piket tidak berserakan atau tertukar.", priority: false }
+                    ]
+                },
+                {
+                    id: "C",
+                    letter: "C",
+                    title: "Sistem Kontrol, Checklist & Apresiasi",
+                    badge: "Dimensi 3: Kontrol & Reward",
+                    why: "Karena tanpa pencatatan dan evaluasi yang transparan, siswa rajin merasa dirugikan sedangkan yang kabur merasa tidak ada konsekuensi.",
+                    colorBorder: "border-rose-500",
+                    colorBadge: "bg-rose-500/20 text-rose-300",
+                    colorTag: "bg-rose-600",
+                    subs: [
+                        { code: "C.1", text: "Membuat kartu checklist piket harian yang diverifikasi dan ditandatangani Ketua Kelas / Wali Kelas.", priority: true },
+                        { code: "C.2", text: "Sistem reward stiker bintang mingguan untuk regu piket paling rapi di mading kelas.", priority: false }
+                    ]
+                }
+            ],
+            priorityTitle: "Akar Masalah Kunci: Peran Kerja Tidak Spesifik dan Lemahnya Lembar Kontrol Harian",
+            priorityDesc: "Siswa melalaikan piket bukan karena malas, tetapi karena tidak ada pembagian peran yang spesifik sehingga saling menunggu. Solusi prioritas: kartu peran kerja terarah (A.1) dan verifikasi checklist ketua kelas (C.1).",
+            pedagogy: [
+                "Langkah 1: Target yang jelas: waktu kerja piket tuntas 12 menit dan seluruh anggota terlibat aktif.",
+                "Langkah 2: Cabang A dibuat untuk mengatur pembagian kerja spesifik (bukan sekadar daftar nama orang). Sub-masalah A.1 & A.2 disisipkan langsung di bawahnya.",
+                "Langkah 3: Cabang B dibuat untuk memastikan kelayakan sarana alat piket. Sub-masalah B.1 & B.2 disisipkan langsung di bawahnya.",
+                "Langkah 4: Cabang C dibuat untuk sistem kontrol dan reward. Sub-masalah C.1 & C.2 disisipkan langsung di bawahnya.",
+                "Langkah 5: Titik keberhasilan ditemukan: kejelasan peran individu (Role Clarity) dan lembar verifikasi harian!"
+            ]
+        }
+    };
+
+    // =========================================================================
+    // STATE & CONTROLLER (5 LANGKAH BERURUTAN)
+    // =========================================================================
+    let currentScenarioKey = 'kantin';
+    let currentStep = 0; // 0, 1, 2, 3, 4
+    let isPlaying = false;
+    let playTimer = null;
+    let animSpeed = 2800;
+
+    function selectScenario(key) {
+        currentScenarioKey = key;
+        
+        document.querySelectorAll('.scenario-card').forEach(c => {
+            c.classList.remove('border-indigo-600', 'border-emerald-600', 'border-amber-600', 'shadow-md', 'ring-2', 'ring-indigo-200', 'ring-emerald-200', 'ring-amber-200');
+            c.classList.add('border-slate-200');
+        });
+        document.querySelectorAll('.active-badge').forEach(b => b.classList.add('hidden'));
+
+        const activeCard = document.getElementById('cardScenario' + key.charAt(0).toUpperCase() + key.slice(1));
+        if (activeCard) {
+            activeCard.classList.remove('border-slate-200');
+            if (key === 'kantin') {
+                activeCard.classList.add('border-indigo-600', 'shadow-md', 'ring-2', 'ring-indigo-200');
+            } else if (key === 'sampah') {
+                activeCard.classList.add('border-emerald-600', 'shadow-md', 'ring-2', 'ring-emerald-200');
+            } else {
+                activeCard.classList.add('border-amber-600', 'shadow-md', 'ring-2', 'ring-amber-200');
+            }
+            const badge = activeCard.querySelector('.active-badge');
+            if (badge) badge.classList.remove('hidden');
+        }
+
+        const sc = scenarios[key];
+        if (!sc) return;
+
+        const tagEl = document.getElementById('scenarioContextTag');
+        if (tagEl) tagEl.innerText = sc.tag;
+        const descEl = document.getElementById('scenarioContextDesc');
+        if (descEl) descEl.innerText = `"${sc.desc}"`;
+        const goalEl = document.getElementById('scenarioContextGoal');
+        if (goalEl) goalEl.innerText = sc.goal;
+        const rootTitleEl = document.getElementById('rootCardTitle');
+        if (rootTitleEl) rootTitleEl.innerText = sc.rootTitle;
+        const prioTitleEl = document.getElementById('priorityTitle');
+        if (prioTitleEl) prioTitleEl.innerText = sc.priorityTitle;
+        const prioDescEl = document.getElementById('priorityDesc');
+        if (prioDescEl) prioDescEl.innerText = sc.priorityDesc;
+
+        // Update Labels in Stepper
+        const step1 = document.getElementById('stepLabel1');
+        if (step1) step1.innerText = `Cabang A (${sc.branches[0].title.split(' ')[0]}...)`;
+        const step2 = document.getElementById('stepLabel2');
+        if (step2) step2.innerText = `Cabang B (${sc.branches[1].title.split(' ')[0]}...)`;
+        const step3 = document.getElementById('stepLabel3');
+        if (step3) step3.innerText = `Cabang C (${sc.branches[2].title.split(' ')[0]}...)`;
+
+        // Render Branch Cards Static Info
+        ['A', 'B', 'C'].forEach((letter, idx) => {
+            const b = sc.branches[idx];
+            const badgeEl = document.getElementById('branchBadge' + letter);
+            if (badgeEl) badgeEl.innerText = b.badge;
+            const titleEl = document.getElementById('branchTitle' + letter);
+            if (titleEl) titleEl.innerText = b.title;
+            const whyEl = document.getElementById('branchWhy' + letter);
+            if (whyEl) whyEl.innerText = b.why;
+        });
+
+        // Populate Custom Branch Selector
+        const branchSelect = document.getElementById('customBranchParent');
+        if (branchSelect) {
+            branchSelect.innerHTML = sc.branches.map((b, idx) => `
+                <option value="${idx}">Di Bawah Cabang ${b.letter}: ${b.title}</option>
+            `).join('');
+        }
+
+        pauseAnimation();
+        goToStep(0);
+    }
+
+    function renderStepView() {
+        const sc = scenarios[currentScenarioKey];
+        if (!sc) return;
+
+        // 1. Update Stepper Pills (0 to 4)
+        for (let i = 0; i <= 4; i++) {
+            const pill = document.getElementById('stepBtn' + i);
+            if (pill) {
+                if (i === currentStep) {
+                    pill.className = "step-pill p-2 rounded-xl border text-left transition font-semibold bg-indigo-600 text-white border-indigo-600 shadow-sm";
+                } else if (i < currentStep) {
+                    pill.className = "step-pill p-2 rounded-xl border text-left transition font-semibold bg-emerald-50 text-emerald-800 border-emerald-300";
+                } else {
+                    pill.className = "step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100";
+                }
+            }
+        }
+
+        // 2. Update Progress fill & Step counter
+        const progressEl = document.getElementById('animProgressFill');
+        if (progressEl) {
+            progressEl.style.width = ((currentStep + 1) * 20) + '%';
+        }
+        const counterEl = document.getElementById('stepCounterText');
+        if (counterEl) counterEl.innerText = `Langkah ${currentStep + 1} dari 5`;
+
+        // 3. Status text & Pedagogy explanation
+        const statusMap = [
+            "Langkah 1: Identifikasi Akar Masalah Utama (Tingkat 0)",
+            `Langkah 2: Mengurai Cabang A (${sc.branches[0].title}) & Sub-Masalahnya`,
+            `Langkah 3: Mengurai Cabang B (${sc.branches[1].title}) & Sub-Masalahnya`,
+            `Langkah 4: Mengurai Cabang C (${sc.branches[2].title}) & Sub-Masalahnya`,
+            "Langkah 5: Graf Pohon Terpadu Utuh & Penetapan Akar Masalah Prioritas"
+        ];
+        const statusEl = document.getElementById('canvasStatusText');
+        if (statusEl) statusEl.innerText = statusMap[currentStep];
+        const pedTitle = document.getElementById('pedagogyStepTitle');
+        if (pedTitle) pedTitle.innerText = `Pelajaran Berpikir Komputasional (Langkah ${currentStep + 1}):`;
+        const pedDesc = document.getElementById('pedagogyExplanation');
+        if (pedDesc) pedDesc.innerText = sc.pedagogy[currentStep];
+
+        // 4. Update Graphic Columns & SVG lines
+        const colA = document.getElementById('branchColA');
+        const colB = document.getElementById('branchColB');
+        const colC = document.getElementById('branchColC');
+
+        const lineA = document.getElementById('svgBranchA');
+        const lineB = document.getElementById('svgBranchB');
+        const lineC = document.getElementById('svgBranchC');
+
+        const prioContainer = document.getElementById('level3PriorityContainer');
+
+        function setColState(col, line, isVisible, isActive) {
+            if (!col) return;
+            if (isVisible) {
+                col.classList.remove('opacity-20', 'filter', 'grayscale');
+                col.classList.add('opacity-100');
+                if (isActive) {
+                    col.classList.add('ring-2', 'ring-indigo-400/50', 'rounded-2xl');
+                } else {
+                    col.classList.remove('ring-2', 'ring-indigo-400/50', 'rounded-2xl');
+                }
+                if (line) {
+                    line.setAttribute('stroke', '#6366f1');
+                    line.setAttribute('stroke-width', '2.5');
+                }
+            } else {
+                col.classList.remove('opacity-100', 'ring-2', 'ring-indigo-400/50', 'rounded-2xl');
+                col.classList.add('opacity-20', 'filter', 'grayscale');
+                if (line) {
+                    line.setAttribute('stroke', '#334155');
+                    line.setAttribute('stroke-width', '1.5');
+                }
+            }
+        }
+
+        // Render Sub-Problems inside each column
+        renderSubProblems('A', sc.branches[0], currentStep >= 1, currentStep === 4);
+        renderSubProblems('B', sc.branches[1], currentStep >= 2, currentStep === 4);
+        renderSubProblems('C', sc.branches[2], currentStep >= 3, currentStep === 4);
+
+        if (currentStep === 0) {
+            setColState(colA, lineA, false, false);
+            setColState(colB, lineB, false, false);
+            setColState(colC, lineC, false, false);
+            if (prioContainer) prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 1) {
+            setColState(colA, lineA, true, true);
+            setColState(colB, lineB, false, false);
+            setColState(colC, lineC, false, false);
+            if (prioContainer) prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 2) {
+            setColState(colA, lineA, true, false);
+            setColState(colB, lineB, true, true);
+            setColState(colC, lineC, false, false);
+            if (prioContainer) prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 3) {
+            setColState(colA, lineA, true, false);
+            setColState(colB, lineB, true, false);
+            setColState(colC, lineC, true, true);
+            if (prioContainer) prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 4) {
+            setColState(colA, lineA, true, false);
+            setColState(colB, lineB, true, false);
+            setColState(colC, lineC, true, false);
+            if (prioContainer) {
+                prioContainer.classList.remove('hidden');
+                setTimeout(() => prioContainer.classList.remove('opacity-0'), 50);
+            }
+        }
+
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    function renderSubProblems(letter, branch, isVisible, showPriorityHighlight) {
+        const container = document.getElementById('subContainer' + letter);
+        if (!container) return;
+
+        if (!isVisible) {
+            container.innerHTML = `
+                <div class="p-3 rounded-xl border border-dashed border-slate-800 text-[11px] text-slate-600 text-center italic">
+                    Sub-masalah belum diurai
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = branch.subs.map((s, idx) => `
+            <div class="p-3 rounded-xl border text-xs node-anim transition-all duration-300 ${showPriorityHighlight && s.priority ? 'bg-amber-950/80 border-amber-400 text-amber-100 pulse-priority font-semibold shadow-lg' : 'bg-slate-900 border-slate-700/80 text-slate-200'}" style="animation-delay: ${idx * 0.12}s">
+                <div class="flex items-start justify-between gap-1.5">
+                    <span class="leading-relaxed"><strong class="text-indigo-300 font-mono">[${s.code || (letter + '.' + (idx+1))}]</strong> ${s.text}</span>
+                    ${showPriorityHighlight && s.priority ? '<span class="bg-amber-400 text-slate-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 shadow">Akar Kunci</span>' : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // =========================================================================
+    // STEPPER CONTROLS
+    // =========================================================================
+    function goToStep(step) {
+        currentStep = Math.max(0, Math.min(4, step));
+        renderStepView();
+    }
+
+    function nextStep() {
+        if (currentStep < 4) {
+            goToStep(currentStep + 1);
+        } else {
+            if (isPlaying) pauseAnimation();
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 0) goToStep(currentStep - 1);
+    }
+
+    function resetAnimation() {
+        pauseAnimation();
+        goToStep(0);
+    }
+
+    function togglePlayPause() {
+        if (isPlaying) {
+            pauseAnimation();
+        } else {
+            startAnimation();
+        }
+    }
+
+    function startAnimation() {
+        isPlaying = true;
+        const textEl = document.getElementById('textPlay');
+        if (textEl) textEl.innerText = "Jeda Animasi";
+        const icon = document.getElementById('iconPlay');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'pause');
+            lucide.createIcons();
+        }
+
+        if (currentStep === 4) {
+            currentStep = 0;
+            renderStepView();
+        }
+
+        playTimer = setInterval(() => {
+            if (currentStep < 4) {
+                nextStep();
+            } else {
+                pauseAnimation();
+            }
+        }, animSpeed);
+    }
+
+    function pauseAnimation() {
+        isPlaying = false;
+        if (playTimer) {
+            clearInterval(playTimer);
+            playTimer = null;
+        }
+        const textEl = document.getElementById('textPlay');
+        if (textEl) textEl.innerText = "Putar Animasi Berurutan";
+        const icon = document.getElementById('iconPlay');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+        }
+    }
+
+    function changeSpeed() {
+        animSpeed = parseInt(document.getElementById('animSpeedSelect').value) || 2800;
+        if (isPlaying) {
+            pauseAnimation();
+            startAnimation();
+        }
+    }
+
+    // =========================================================================
+    // CUSTOM SUB-PROBLEM ADDER (DISISIPKAN LANGSUNG KE CABANG PILIHAN)
+    // =========================================================================
+    function addCustomSubProblem() {
+        const branchIdx = parseInt(document.getElementById('customBranchParent').value);
+        const input = document.getElementById('customSubText');
+        const text = input.value.trim();
+
+        if (!text) {
+            alert('Silakan ketikkan sub-masalah operasional Anda terlebih dahulu!');
+            return;
+        }
+
+        const sc = scenarios[currentScenarioKey];
+        if (sc && sc.branches[branchIdx]) {
+            const letter = sc.branches[branchIdx].letter;
+            const newIndex = sc.branches[branchIdx].subs.length + 1;
+            sc.branches[branchIdx].subs.push({
+                code: letter + '.' + newIndex,
+                text: text + " (Oleh Siswa)",
+                priority: false
+            });
+            input.value = '';
+            alert('Bagus! Sub-masalah baru berhasil disisipkan tepat di bawah Cabang ' + letter + ' (' + sc.branches[branchIdx].title + '). Menampilkan sekarang.');
+            goToStep(branchIdx + 1);
+        }
+    }
+
+    // Pertemuan 2 Sortir Kartu Data
+    const p2Cards = [
+        { id: 1, text: "Jumlah murid yang mengantre di kasir", target: "penting", status: null },
+        { id: 2, text: "Warna seragam dan celemek penjual", target: "abaikan", status: null },
+        { id: 3, text: "Waktu rata-rata transaksi per murid (detik)", target: "penting", status: null },
+        { id: 4, text: "Merek sepatu yang dipakai murid", target: "abaikan", status: null },
+        { id: 5, text: "Jumlah kasir/petugas yang aktif melayani", target: "penting", status: null },
+        { id: 6, text: "Warna bungkus kemasan makanan ringan", target: "abaikan", status: null },
+        { id: 7, text: "Pola jam puncak kedatangan murid (menit 0–5)", target: "penting", status: null },
+        { id: 8, text: "Cuaca mendung atau cerah di luar sekolah", target: "abaikan", status: null }
+    ];
+
+    function renderSimP2() {
+        const grid = document.getElementById('p2CardsGrid');
+        if (!grid) return;
+        grid.innerHTML = p2Cards.map(c => `
+            <div class="p-4 rounded-2xl border ${c.status === 'correct' ? 'bg-emerald-50 border-emerald-300' : (c.status === 'wrong' ? 'bg-rose-50 border-rose-300' : 'bg-slate-50 border-slate-200')} flex flex-col justify-between space-y-3">
+                <span class="text-xs font-semibold text-slate-800">${c.text}</span>
+                <div class="flex items-center space-x-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="chooseP2Card(${c.id}, 'penting')" class="flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bold ${c.status === 'correct' && c.target === 'penting' ? 'bg-emerald-600 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                        PENTING
+                    </button>
+                    <button type="button" onclick="chooseP2Card(${c.id}, 'abaikan')" class="flex-1 py-1.5 px-2 rounded-xl text-[11px] font-bold ${c.status === 'correct' && c.target === 'abaikan' ? 'bg-slate-700 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}">
+                        DIABAIKAN
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        const correctCount = p2Cards.filter(c => c.status === 'correct').length;
+        const display = document.getElementById('p2ScoreDisplay');
+        if (display) {
+            display.innerText = `${correctCount} / 8 Tepat`;
+        }
+    }
+
+    function chooseP2Card(id, choice) {
+        const card = p2Cards.find(c => c.id === id);
+        if (!card) return;
+        if (card.target === choice) {
+            card.status = 'correct';
+        } else {
+            card.status = 'wrong';
+            alert('Kurang tepat. Pikirkan: Apakah informasi ini memengaruhi perhitungan lamanya antrean?');
+        }
+        renderSimP2();
+    }
+
+    // =========================================================================
+    // PERTEMUAN 3: DRY-RUN FLOWCHART ENGINE (ANIMASI SIMBOL STANDAR)
+    // =========================================================================
+    let traceStep = 0;
+    let tracePlaying = false;
+    let traceTimer = null;
+    let traceSpeed = 1500;
+    let traceRecords = [];
+
+    function onInputChange() {
+        const q1 = parseInt(document.getElementById('p3Antrean1')?.value) || 0;
+        const q2 = parseInt(document.getElementById('p3Antrean2')?.value) || 0;
+        const k1Aktif = document.getElementById('p3Kasir1Aktif')?.value === 'true';
+
+        // Update text inside SVG
+        const valInput = document.getElementById('fc_val_input');
+        if (valInput) {
+            valInput.textContent = `Q1 = ${q1}  |  Q2 = ${q2}  |  Kasir 1: ${k1Aktif ? 'BUKA' : 'TUTUP'}`;
+        }
+        const valDec1 = document.getElementById('fc_val_dec1');
+        if (valDec1) {
+            valDec1.textContent = k1Aktif ? `[ Status: BUKA ]` : `[ Status: TUTUP ]`;
+        }
+        const valDec2 = document.getElementById('fc_val_dec2');
+        if (valDec2) {
+            valDec2.textContent = `[ ${q1} ≤ ${q2} ? ${q1 <= q2 ? 'TRUE' : 'FALSE'} ]`;
+        }
+        const outText = document.getElementById('fc_val_output');
+        if (outText) outText.textContent = 'CETAK: Arahkan ke Kasir X';
+        const outDesc = document.getElementById('fc_val_outdesc');
+        if (outDesc) outDesc.textContent = 'Instruksi hasil evaluasi algoritma';
+
+        // Reset running trace if inputs change
+        resetTraceFlowchart();
+    }
+
+    function applyPreset(q1, q2, k1Aktif) {
+        const in1 = document.getElementById('p3Antrean1');
+        const in2 = document.getElementById('p3Antrean2');
+        const selK1 = document.getElementById('p3Kasir1Aktif');
+        if (in1) in1.value = q1;
+        if (in2) in2.value = q2;
+        if (selK1) selK1.value = k1Aktif.toString();
+        onInputChange();
+        // Automatically start the trace animation
+        startPlayTrace();
+    }
+
+    function getTraceSequence() {
+        const q1 = parseInt(document.getElementById('p3Antrean1')?.value) || 0;
+        const q2 = parseInt(document.getElementById('p3Antrean2')?.value) || 0;
+        const k1Aktif = document.getElementById('p3Kasir1Aktif')?.value === 'true';
+
+        const steps = [];
+
+        // Step 1: MULAI (TERMINATOR)
+        steps.push({
+            nodeId: 'fc_node_1',
+            pathId: null,
+            symbolType: 'Terminator (Oval)',
+            symbolColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-500',
+            blockName: 'MULAI (START)',
+            memoryState: `antrean1=?, antrean2=?, status_k1=?`,
+            conditionEval: '-',
+            outputStatus: 'Program dimulai',
+            statusDesc: 'Langkah 1: Mengawali eksekusi program diagram alir [TERMINATOR: MULAI]'
+        });
+
+        // Step 2: BACA INPUT (INPUT / OUTPUT)
+        steps.push({
+            nodeId: 'fc_node_2',
+            pathId: 'path_1_2',
+            symbolType: 'Input / Output (Jajargenjang)',
+            symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+            blockName: 'BACA INPUT DATA',
+            memoryState: `antrean1=${q1}, antrean2=${q2}, status_k1=${k1Aktif ? 'BUKA' : 'TUTUP'}`,
+            conditionEval: 'Sukses membaca input',
+            outputStatus: 'Data antrean tersimpan di memori',
+            statusDesc: `Langkah 2: Membaca data masukan antrean1=${q1}, antrean2=${q2}, status=${k1Aktif ? 'BUKA' : 'TUTUP'} [INPUT / OUTPUT]`
+        });
+
+        // Step 3: DECISION 1 (Apakah Kasir 1 Buka?)
+        steps.push({
+            nodeId: 'fc_node_3',
+            pathId: 'path_2_3',
+            symbolType: 'Decision (Belah Ketupat)',
+            symbolColor: 'text-amber-300 bg-amber-950/60 border-amber-500',
+            blockName: 'Apakah Kasir 1 BUKA?',
+            memoryState: `status_k1=${k1Aktif ? 'BUKA' : 'TUTUP'}`,
+            conditionEval: k1Aktif ? 'TRUE (Kasir 1 Buka)' : 'FALSE (Kasir 1 TUTUP)',
+            outputStatus: k1Aktif ? 'Ambil Cabang [YA: BUKA] ➔ Lanjut' : 'Ambil Cabang [TIDAK: TUTUP] ➔ Bypass ke Kasir 2',
+            statusDesc: k1Aktif 
+                ? 'Langkah 3: Kasir 1 Buka. Melanjutkan ke perbandingan antrean [DECISION 1: TRUE]'
+                : 'Langkah 3: ⚠️ Kasir 1 Sedang Tutup! Logika bypass kasus khusus diterapkan [DECISION 1: FALSE]'
+        });
+
+        if (!k1Aktif) {
+            // EDGE CASE: KASIR 1 TUTUP
+            // Step 4: PROSES B (tujuan = Kasir 2)
+            steps.push({
+                nodeId: 'fc_node_5b',
+                pathId: 'path_3_5b_tidak',
+                symbolType: 'Proses (Persegi Panjang)',
+                symbolColor: 'text-indigo-300 bg-indigo-950/60 border-indigo-500',
+                blockName: 'tujuan = "Kasir 2"',
+                memoryState: `tujuan="Kasir 2" (Bypass Tutup)`,
+                conditionEval: 'Eksekusi Penugasan Variabel',
+                outputStatus: 'Penetapan tujuan Kasir 2',
+                statusDesc: 'Langkah 4: Kasir 1 tutup, menetapkan tujuan = "Kasir 2" [PROSES B]'
+            });
+
+            // Step 5: OUTPUT HASIL
+            steps.push({
+                nodeId: 'fc_node_6',
+                pathId: 'path_5b_6',
+                symbolType: 'Input / Output (Jajargenjang)',
+                symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+                blockName: 'CETAK HASIL',
+                memoryState: `tujuan="Kasir 2"`,
+                conditionEval: '-',
+                outputStatus: 'Silakan ke KASIR 2 (Kasir 1 Tutup)',
+                outputTitle: 'Arahkan ke KASIR 2',
+                outputReason: '(Bypass: Kasir 1 Sedang Tutup)',
+                statusDesc: 'Langkah 5: Mencetak hasil instruksi ke layar murid [INPUT / OUTPUT]'
+            });
+
+            // Step 6: SELESAI
+            steps.push({
+                nodeId: 'fc_node_7',
+                pathId: 'path_6_7',
+                symbolType: 'Terminator (Oval)',
+                symbolColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-500',
+                blockName: 'SELESAI (END)',
+                memoryState: `Status: Sukses`,
+                conditionEval: 'Valid',
+                outputStatus: 'Program Berhenti Normal',
+                statusDesc: 'Langkah 6: Diagram alir selesai dijalankan dengan sempurna [TERMINATOR: SELESAI]'
+            });
+        } else {
+            // NORMAL FLOW: KASIR 1 BUKA
+            const conditionQ = q1 <= q2;
+
+            // Step 4: DECISION 2 (antrean1 <= antrean2?)
+            steps.push({
+                nodeId: 'fc_node_4',
+                pathId: 'path_3_4_ya',
+                symbolType: 'Decision (Belah Ketupat)',
+                symbolColor: 'text-amber-300 bg-amber-950/60 border-amber-500',
+                blockName: 'antrean1 ≤ antrean2 ?',
+                memoryState: `q1=${q1}, q2=${q2}`,
+                conditionEval: conditionQ ? `TRUE (${q1} ≤ ${q2})` : `FALSE (${q1} > ${q2})`,
+                outputStatus: conditionQ ? 'Ambil Cabang [YA: Q1≤Q2] ➔ Kasir 1' : 'Ambil Cabang [TIDAK: Q1>Q2] ➔ Kasir 2',
+                statusDesc: conditionQ
+                    ? `Langkah 4: Evaluasi ${q1} ≤ ${q2} adalah TRUE. Memilih Kasir 1 [DECISION 2: TRUE]`
+                    : `Langkah 4: Evaluasi ${q1} ≤ ${q2} adalah FALSE (${q1} > ${q2}). Memilih Kasir 2 [DECISION 2: FALSE]`
+            });
+
+            if (conditionQ) {
+                // Step 5: PROSES A (tujuan = Kasir 1)
+                steps.push({
+                    nodeId: 'fc_node_5a',
+                    pathId: 'path_4_5a_ya',
+                    symbolType: 'Proses (Persegi Panjang)',
+                    symbolColor: 'text-indigo-300 bg-indigo-950/60 border-indigo-500',
+                    blockName: 'tujuan = "Kasir 1"',
+                    memoryState: `tujuan="Kasir 1" (Q1 Singkat/Sama)`,
+                    conditionEval: 'Eksekusi Penugasan Variabel',
+                    outputStatus: 'Penetapan tujuan Kasir 1',
+                    statusDesc: 'Langkah 5: Antrean Kasir 1 lebih pendek atau sama, menetapkan tujuan = "Kasir 1" [PROSES A]'
+                });
+
+                // Step 6: OUTPUT HASIL
+                steps.push({
+                    nodeId: 'fc_node_6',
+                    pathId: 'path_5a_6',
+                    symbolType: 'Input / Output (Jajargenjang)',
+                    symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+                    blockName: 'CETAK HASIL',
+                    memoryState: `tujuan="Kasir 1"`,
+                    conditionEval: '-',
+                    outputStatus: 'Silakan ke KASIR 1 (Q1 Singkat/Sama)',
+                    outputTitle: 'Arahkan ke KASIR 1',
+                    outputReason: '(Antrean Lebih Pendek / Sama)',
+                    statusDesc: 'Langkah 6: Mencetak hasil instruksi ke layar murid [INPUT / OUTPUT]'
+                });
+            } else {
+                // Step 5: PROSES B (tujuan = Kasir 2)
+                steps.push({
+                    nodeId: 'fc_node_5b',
+                    pathId: 'path_4_5b_tidak',
+                    symbolType: 'Proses (Persegi Panjang)',
+                    symbolColor: 'text-indigo-300 bg-indigo-950/60 border-indigo-500',
+                    blockName: 'tujuan = "Kasir 2"',
+                    memoryState: `tujuan="Kasir 2" (Q2 Lebih Pendek)`,
+                    conditionEval: 'Eksekusi Penugasan Variabel',
+                    outputStatus: 'Penetapan tujuan Kasir 2',
+                    statusDesc: 'Langkah 5: Antrean Kasir 2 lebih pendek, menetapkan tujuan = "Kasir 2" [PROSES B]'
+                });
+
+                // Step 6: OUTPUT HASIL
+                steps.push({
+                    nodeId: 'fc_node_6',
+                    pathId: 'path_5b_6',
+                    symbolType: 'Input / Output (Jajargenjang)',
+                    symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+                    blockName: 'CETAK HASIL',
+                    memoryState: `tujuan="Kasir 2"`,
+                    conditionEval: '-',
+                    outputStatus: 'Silakan ke KASIR 2 (Q2 Lebih Pendek)',
+                    outputTitle: 'Arahkan ke KASIR 2',
+                    outputReason: '(Antrean Kasir 2 Lebih Sedikit)',
+                    statusDesc: 'Langkah 6: Mencetak hasil instruksi ke layar murid [INPUT / OUTPUT]'
+                });
+            }
+
+            // Step 7: SELESAI
+            steps.push({
+                nodeId: 'fc_node_7',
+                pathId: 'path_6_7',
+                symbolType: 'Terminator (Oval)',
+                symbolColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-500',
+                blockName: 'SELESAI (END)',
+                memoryState: `Status: Sukses`,
+                conditionEval: 'Optimal',
+                outputStatus: 'Program Berhenti Normal',
+                statusDesc: 'Langkah 7: Diagram alir selesai dijalankan dengan sempurna [TERMINATOR: SELESAI]'
+            });
+        }
+
+        return steps;
+    }
+
+    function renderTraceStep(stepIdx) {
+        const steps = getTraceSequence();
+        const total = steps.length;
+
+        const allNodes = ['fc_node_1', 'fc_node_2', 'fc_node_3', 'fc_node_4', 'fc_node_5a', 'fc_node_5b', 'fc_node_6', 'fc_node_7'];
+        const allPaths = ['path_1_2', 'path_2_3', 'path_3_4_ya', 'path_3_5b_tidak', 'path_4_5a_ya', 'path_4_5b_tidak', 'path_5a_6', 'path_5b_6', 'path_6_7'];
+
+        if (stepIdx <= 0) {
+            allNodes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.className.baseVal = "fc-node transition-all duration-300";
+            });
+            allPaths.forEach(id => {
+                const p = document.getElementById(id);
+                if (p) {
+                    p.setAttribute('stroke', '#475569');
+                    p.setAttribute('stroke-width', '2.5');
+                    p.setAttribute('marker-end', 'url(#arrow-default)');
+                    p.classList.remove('fc-path-active', 'fc-path-dimmed');
+                }
+            });
+            const statusEl = document.getElementById('flowchartStatusText');
+            if (statusEl) statusEl.textContent = "Siap: Klik 'Putar Animasi Flowchart' atau 'Langkah Berikutnya'";
+            const countEl = document.getElementById('flowchartStepCounter');
+            if (countEl) countEl.textContent = `Langkah 0 dari ${total}`;
+            const prog = document.getElementById('traceProgressFill');
+            if (prog) prog.style.width = '0%';
+            return;
+        }
+
+        const currentStepObj = steps[stepIdx - 1];
+        if (!currentStepObj) return;
+
+        allNodes.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (id === currentStepObj.nodeId) {
+                el.className.baseVal = "fc-node fc-node-active transition-all duration-300";
+            } else {
+                el.className.baseVal = "fc-node fc-node-dimmed transition-all duration-300";
+            }
+        });
+
+        allPaths.forEach(id => {
+            const p = document.getElementById(id);
+            if (!p) return;
+            p.classList.remove('fc-path-active');
+            p.classList.add('fc-path-dimmed');
+            p.setAttribute('stroke', '#334155');
+            p.setAttribute('stroke-width', '2');
+            p.setAttribute('marker-end', 'url(#arrow-default)');
+        });
+
+        if (currentStepObj.pathId) {
+            const curP = document.getElementById(currentStepObj.pathId);
+            if (curP) {
+                curP.classList.remove('fc-path-dimmed');
+                curP.classList.add('fc-path-active');
+                if (currentStepObj.pathId.includes('_ya')) {
+                    curP.setAttribute('stroke', '#34d399');
+                    curP.setAttribute('marker-end', 'url(#arrow-true)');
+                } else if (currentStepObj.pathId.includes('_tidak')) {
+                    curP.setAttribute('stroke', '#f87171');
+                    curP.setAttribute('marker-end', 'url(#arrow-false)');
+                } else {
+                    curP.setAttribute('stroke', '#818cf8');
+                    curP.setAttribute('marker-end', 'url(#arrow-active)');
+                }
+            }
+        }
+
+        if (currentStepObj.nodeId === 'fc_node_6') {
+            const outText = document.getElementById('fc_val_output');
+            const outDesc = document.getElementById('fc_val_outdesc');
+            if (outText) outText.textContent = `CETAK: ${currentStepObj.outputTitle || currentStepObj.outputStatus}`;
+            if (outDesc && currentStepObj.outputReason) outDesc.textContent = currentStepObj.outputReason;
+        }
+
+        const statusEl = document.getElementById('flowchartStatusText');
+        if (statusEl) statusEl.textContent = currentStepObj.statusDesc;
+        const countEl = document.getElementById('flowchartStepCounter');
+        if (countEl) countEl.textContent = `Langkah ${stepIdx} dari ${total}`;
+        const prog = document.getElementById('traceProgressFill');
+        if (prog) prog.style.width = Math.round((stepIdx / total) * 100) + '%';
+
+        addTraceRowIfNew(stepIdx, currentStepObj);
+    }
+
+    function addTraceRowIfNew(stepIdx, stepObj) {
+        if (!traceRecords.some(r => r.step === stepIdx)) {
+            traceRecords.push({ step: stepIdx, obj: stepObj });
+            renderTraceTable();
+        }
+    }
+
+    function renderTraceTable() {
+        const tbody = document.getElementById('traceTableBody');
+        if (!tbody) return;
+        if (traceRecords.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 italic font-sans text-xs">Tekan tombol <strong>"Putar Animasi Flowchart"</strong> atau <strong>"Langkah Berikutnya"</strong> untuk merekam langkah telusur ke tabel.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = traceRecords.map(r => `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <td class="py-2.5 px-4 font-bold text-center text-indigo-600">${r.step}</td>
+                <td class="py-2.5 px-4 font-semibold text-xs">
+                    <span class="inline-block px-2 py-0.5 rounded-md border text-[10px] ${r.obj.symbolColor}">
+                        ${r.obj.symbolType}
+                    </span>
+                </td>
+                <td class="py-2.5 px-4 font-bold text-slate-800">${r.obj.blockName}</td>
+                <td class="py-2.5 px-4 text-slate-600 font-mono text-[11px]">${r.obj.memoryState}</td>
+                <td class="py-2.5 px-4 font-bold ${r.obj.conditionEval.includes('TRUE') || r.obj.conditionEval.includes('Sukses') || r.obj.conditionEval.includes('Optimal') ? 'text-emerald-600' : (r.obj.conditionEval.includes('FALSE') ? 'text-rose-600' : 'text-amber-600')}">${r.obj.conditionEval}</td>
+                <td class="py-2.5 px-4 font-bold text-slate-800">${r.obj.outputStatus}</td>
+            </tr>
+        `).join('');
+    }
+
+    function nextStepTrace() {
+        const steps = getTraceSequence();
+        if (traceStep < steps.length) {
+            traceStep++;
+            renderTraceStep(traceStep);
+        } else {
+            pausePlayTrace();
+        }
+    }
+
+    function prevStepTrace() {
+        if (traceStep > 1) {
+            traceStep--;
+            renderTraceStep(traceStep);
+        } else {
+            resetTraceFlowchart();
+        }
+    }
+
+    function togglePlayPauseTrace() {
+        if (tracePlaying) {
+            pausePlayTrace();
+        } else {
+            startPlayTrace();
+        }
+    }
+
+    function startPlayTrace() {
+        tracePlaying = true;
+        const textEl = document.getElementById('textPlayTrace');
+        if (textEl) textEl.textContent = "Jeda Animasi";
+        const icon = document.getElementById('iconPlayTrace');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'pause');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        const steps = getTraceSequence();
+        if (traceStep >= steps.length) {
+            traceStep = 0;
+            clearTraceTable();
+        }
+
+        if (traceStep === 0) {
+            nextStepTrace();
+        }
+
+        if (traceTimer) clearInterval(traceTimer);
+        traceTimer = setInterval(() => {
+            const currentSteps = getTraceSequence();
+            if (traceStep < currentSteps.length) {
+                nextStepTrace();
+            } else {
+                pausePlayTrace();
+            }
+        }, traceSpeed);
+    }
+
+    function pausePlayTrace() {
+        tracePlaying = false;
+        if (traceTimer) {
+            clearInterval(traceTimer);
+            traceTimer = null;
+        }
+        const textEl = document.getElementById('textPlayTrace');
+        if (textEl) textEl.textContent = "Putar Animasi Flowchart";
+        const icon = document.getElementById('iconPlayTrace');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'play');
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+
+    function resetTraceFlowchart() {
+        pausePlayTrace();
+        traceStep = 0;
+        renderTraceStep(0);
+        const outText = document.getElementById('fc_val_output');
+        if (outText) outText.textContent = 'CETAK: Arahkan ke Kasir X';
+        const outDesc = document.getElementById('fc_val_outdesc');
+        if (outDesc) outDesc.textContent = 'Instruksi hasil evaluasi algoritma';
+    }
+
+    function changeTraceSpeed() {
+        traceSpeed = parseInt(document.getElementById('traceSpeedSelect')?.value) || 1500;
+        if (tracePlaying) {
+            pausePlayTrace();
+            startPlayTrace();
+        }
+    }
+
+    function clearTraceTable() {
+        traceRecords = [];
+        renderTraceTable();
+    }
+
+    function runP3Simulation() {
+        startPlayTrace();
+    }
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', () => {
+        // Read active tab from URL or Jinja template
+        const initialTab = "{{ active_tab or 'materi' }}";
+        switchSubTab(initialTab);
+
+        if (document.getElementById('cardScenarioKantin')) {
+            selectScenario('kantin');
+        }
+        renderSimP2();
+        if (document.getElementById('flowchartSvg')) {
+            onInputChange();
+        }
+
+        // Inisialisasi LKPD 3 Interaktif jika kontainer tersedia di halaman
+        if (typeof lkpd3_init === 'function' && document.getElementById('lkpd3_steps_list')) {
+            lkpd3_init();
+        }
+    });
+</script>
+{% endblock %}

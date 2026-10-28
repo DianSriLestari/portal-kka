@@ -1,0 +1,1010 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Simulasi 1: Pohon Dekomposisi Interaktif Berurutan - Portal KKA{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 15px rgba(244, 63, 94, 0.4); transform: scale(1); }
+        50% { box-shadow: 0 0 25px rgba(244, 63, 94, 0.7); transform: scale(1.015); }
+    }
+    @keyframes pulsePriority {
+        0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.5); border-color: #f59e0b; }
+        50% { box-shadow: 0 0 30px rgba(245, 158, 11, 0.85); border-color: #fbbf24; }
+    }
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: translateY(14px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .node-anim {
+        animation: fadeInScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .pulse-root {
+        animation: pulseGlow 3s infinite ease-in-out;
+    }
+    .pulse-priority {
+        animation: pulsePriority 2s infinite ease-in-out;
+    }
+    .branch-line-anim {
+        transition: stroke 0.5s ease, stroke-width 0.5s ease, opacity 0.5s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header & Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="/siswa/simulasi" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Kembali ke Hub Lab Simulasi</span>
+        </a>
+        <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-500 font-mono">Simulasi 1 • Dekomposisi Bertingkat</span>
+            <a href="/siswa/modul/1?tab=simulasi" class="text-xs font-bold text-indigo-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition shadow-sm">
+                Lihat di Modul 1 &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Title & Description Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl space-y-3 border border-indigo-800/40">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="bg-indigo-500 text-white font-bold px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow-sm">
+                Pertemuan 1 • Berpikir Komputasional
+            </span>
+            <span class="bg-teal-500/20 text-teal-300 border border-teal-400/30 text-xs px-3 py-1 rounded-full font-medium">
+                🌱 Animasi Graf Percabangan Terpadu
+            </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Graf Pohon Dekomposisi: Pemecahan Masalah Bertingkat
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+            Saksikan bagaimana masalah autentik sekolah dipecah secara hierarkis: 
+            <strong>Akar Masalah (Tingkat 0)</strong> bercabang menjadi <strong>Dimensi Pilar (Tingkat 1)</strong> lengkap dengan alasan logis mengapa cabang itu dibuat, dan langsung terurai ke <strong>Sub-Masalah Operasional (Tingkat 2)</strong> di bawah masing-masing cabang.
+        </p>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1. PEMILIH 3 SKENARIO MASALAH NYATA SEKOLAH                               -->
+    <!-- ========================================================================= -->
+    <div class="space-y-2">
+        <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+                <span>Pilih 1 dari 3 Skenario Masalah Autentik Sekolah:</span>
+            </label>
+            <span class="text-[11px] text-slate-400">Klik kartu untuk beralih skenario</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            
+            <!-- Skenario 1: Kantin -->
+            <button type="button" onclick="selectScenario('kantin')" id="cardScenarioKantin" class="scenario-card p-4 rounded-2xl border-2 text-left transition duration-200 relative overflow-hidden bg-white border-indigo-600 shadow-md ring-2 ring-indigo-200">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-lg shrink-0">
+                        🍔
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-indigo-700 block tracking-wide">Skenario 1 (Kasus Utama)</span>
+                        <h3 class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 leading-snug">Antrean Panjang Kasir Kantin</h3>
+                        <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">Waktu antrean 15 menit, murid kehabisan waktu istirahat dan belum sempat makan.</p>
+                    </div>
+                </div>
+                <div class="active-badge absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-600"></div>
+            </button>
+
+            <!-- Skenario 2: Sampah -->
+            <button type="button" onclick="selectScenario('sampah')" id="cardScenarioSampah" class="scenario-card p-4 rounded-2xl border-2 text-left transition duration-200 relative overflow-hidden bg-white border-slate-200 hover:border-slate-300">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-lg shrink-0">
+                        ♻️
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block tracking-wide">Skenario 2</span>
+                        <h3 class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 leading-snug">Sampah Menumpuk Tidak Terpilah</h3>
+                        <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">Plastik dan sisa makanan meluber seusai istirahat, mengotori lingkungan sekolah.</p>
+                    </div>
+                </div>
+                <div class="active-badge hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-600"></div>
+            </button>
+
+            <!-- Skenario 3: Piket -->
+            <button type="button" onclick="selectScenario('piket')" id="cardScenarioPiket" class="scenario-card p-4 rounded-2xl border-2 text-left transition duration-200 relative overflow-hidden bg-white border-slate-200 hover:border-slate-300">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-lg shrink-0">
+                        🧹
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-slate-400 block tracking-wide">Skenario 3</span>
+                        <h3 class="font-bold text-slate-900 text-xs sm:text-sm mt-0.5 leading-snug">Piket Kelas Sering Terabaikan</h3>
+                        <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">Siswa pulang tanpa bekerja, ruang kelas kotor saat bel masuk pagi.</p>
+                    </div>
+                </div>
+                <div class="active-badge hidden absolute top-2 right-2 w-2 h-2 rounded-full bg-amber-600"></div>
+            </button>
+
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. KOTAK NARASI KONTEKS SKENARIO                                          -->
+    <!-- ========================================================================= -->
+    <div id="scenarioContextBox" class="bg-gradient-to-br from-amber-50 to-orange-50/60 rounded-3xl p-5 sm:p-6 border border-amber-200 text-xs sm:text-sm text-amber-950 space-y-2 shadow-sm">
+        <div class="flex items-center justify-between">
+            <span class="font-bold uppercase tracking-wider text-[11px] text-amber-800 flex items-center space-x-1.5">
+                <i data-lucide="sparkles" class="w-4 h-4 text-amber-600"></i>
+                <span id="scenarioContextTag">Latar Belakang Kasus: Antrean Kantin Sekolah</span>
+            </span>
+            <span class="bg-amber-200/60 text-amber-900 font-bold px-2.5 py-0.5 rounded-full text-[10px]">Autentik SMA</span>
+        </div>
+        <p id="scenarioContextDesc" class="leading-relaxed italic font-serif text-slate-800 bg-white/80 p-3.5 rounded-xl border border-amber-100">
+            "Bel istirahat 20 menit berbunyi. Sebanyak 180 siswa SMA serempak menuju kantin. Antrean kasir mengular panjang hingga ke lorong kelas, membuat Rani dan Dimas kehabisan waktu istirahat dan belum sempat makan saat bel masuk berbunyi."
+        </p>
+        <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-amber-900 pt-1">
+            <span>🎯 <strong>Tujuan Dekomposisi:</strong> <span id="scenarioContextGoal">Mengurai sumber keterlambatan menjadi unit kerja operasional yang bisa diselesaikan kelompok.</span></span>
+            <span class="font-mono text-slate-500">Unit 1 • Fase E</span>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. KONTROLER ANIMASI BERURUTAN (STEPPER & PLAYBACK)                       -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+        
+        <!-- Stepper Indicator Pills: 5 Langkah Berurutan -->
+        <div>
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Urutan Percabangan Masalah (Graf Berurutan):</div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                
+                <button type="button" onclick="goToStep(0)" id="stepBtn0" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-indigo-600 text-white border-indigo-600 shadow-sm">
+                    <span class="block text-[9px] font-bold opacity-80 uppercase">Langkah 1</span>
+                    <span class="block text-xs mt-0.5 truncate">0. Masalah Utama</span>
+                </button>
+
+                <button type="button" onclick="goToStep(1)" id="stepBtn1" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                    <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 2</span>
+                    <span class="block text-xs mt-0.5 truncate" id="stepLabel1">Cabang A (+ Sub)</span>
+                </button>
+
+                <button type="button" onclick="goToStep(2)" id="stepBtn2" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                    <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 3</span>
+                    <span class="block text-xs mt-0.5 truncate" id="stepLabel2">Cabang B (+ Sub)</span>
+                </button>
+
+                <button type="button" onclick="goToStep(3)" id="stepBtn3" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                    <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 4</span>
+                    <span class="block text-xs mt-0.5 truncate" id="stepLabel3">Cabang C (+ Sub)</span>
+                </button>
+
+                <button type="button" onclick="goToStep(4)" id="stepBtn4" class="step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100">
+                    <span class="block text-[9px] font-bold opacity-60 uppercase">Langkah 5</span>
+                    <span class="block text-xs mt-0.5 truncate">Pohon Utuh & Prioritas</span>
+                </button>
+
+            </div>
+        </div>
+
+        <!-- Playback Actions Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+            
+            <div class="flex items-center space-x-2">
+                <!-- Play/Pause Button -->
+                <button type="button" onclick="togglePlayPause()" id="btnPlayPause" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center space-x-1.5">
+                    <i data-lucide="play" id="iconPlay" class="w-4 h-4"></i>
+                    <span id="textPlay">Putar Animasi Berurutan</span>
+                </button>
+
+                <!-- Prev Button -->
+                <button type="button" onclick="prevStep()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Sebelumnya">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Next Button -->
+                <button type="button" onclick="nextStep()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Berikutnya">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Replay Button -->
+                <button type="button" onclick="resetAnimation()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Ulangi dari Langkah 1">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <!-- Speed & Progress Bar -->
+            <div class="flex items-center space-x-3 text-xs">
+                <div class="flex items-center space-x-1.5 text-slate-500">
+                    <span class="text-[11px] font-semibold">Kecepatan:</span>
+                    <select id="animSpeedSelect" onchange="changeSpeed()" class="p-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white outline-none">
+                        <option value="4500">Santai (4.5 detik)</option>
+                        <option value="2800" selected>Normal (2.8 detik)</option>
+                        <option value="1600">Cepat (1.6 detik)</option>
+                    </select>
+                </div>
+
+                <div class="w-24 bg-slate-100 rounded-full h-2 overflow-hidden hidden sm:block">
+                    <div id="animProgressFill" class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: 20%;"></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. KANVAS GRAF POHON DEKOMPOSISI TERPADU (HIERARKI MENYATU)               -->
+    <!-- ========================================================================= -->
+    <div class="bg-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-slate-800 space-y-6 relative overflow-hidden">
+        
+        <!-- Status Bar -->
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800/80 pb-3 text-xs font-mono">
+            <div class="flex items-center space-x-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping"></span>
+                <span class="text-teal-400 font-bold" id="canvasStatusText">Langkah 1: Identifikasi Akar Masalah Utama</span>
+            </div>
+            <span class="text-slate-500 text-[11px]" id="stepCounterText">Langkah 1 dari 5</span>
+        </div>
+
+        <!-- TINGKAT 0: AKAR MASALAH (ROOT NODE) -->
+        <div id="nodeRootContainer" class="flex flex-col items-center justify-center relative">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-rose-400 mb-1 flex items-center space-x-1">
+                <span>[ Tingkat 0 : Akar Masalah Utama ]</span>
+            </div>
+            <div id="rootCard" class="max-w-xl w-full bg-gradient-to-r from-rose-900/90 via-red-900 to-rose-950 p-4 sm:p-5 rounded-2xl border-2 border-rose-500 text-white shadow-lg pulse-root text-center transition-all duration-500">
+                <div class="flex items-center justify-center space-x-2 text-rose-300 text-xs font-bold uppercase mb-1">
+                    <i data-lucide="alert-octagon" class="w-4 h-4"></i>
+                    <span>Masalah Utama Belum Terurai</span>
+                </div>
+                <h3 class="text-base sm:text-lg font-black text-white" id="rootCardTitle">
+                    Mengurangi Waktu Antrean Kasir Kantin dari 15 Menit Menjadi 3 Menit
+                </h3>
+            </div>
+        </div>
+
+        <!-- SVG PERCABANGAN GRAF KE CABANG A, B, C -->
+        <div class="relative w-full h-12 hidden md:block">
+            <svg class="w-full h-full" viewBox="0 0 900 48" preserveAspectRatio="none">
+                <!-- Batang Tengah Turun -->
+                <line x1="450" y1="0" x2="450" y2="20" stroke="#6366f1" stroke-width="2.5" />
+                
+                <!-- Garis Horizontal Membagi ke 3 Cabang -->
+                <line x1="150" y1="20" x2="750" y2="20" stroke="#4338ca" stroke-width="2" stroke-dasharray="4" />
+                
+                <!-- Cabang A (Kiri) -->
+                <path id="svgBranchA" class="branch-line-anim" d="M 450 20 L 150 20 L 150 48" fill="none" stroke="#64748b" stroke-width="2" />
+                <!-- Cabang B (Tengah) -->
+                <path id="svgBranchB" class="branch-line-anim" d="M 450 20 L 450 48" fill="none" stroke="#64748b" stroke-width="2" />
+                <!-- Cabang C (Kanan) -->
+                <path id="svgBranchC" class="branch-line-anim" d="M 450 20 L 750 20 L 750 48" fill="none" stroke="#64748b" stroke-width="2" />
+            </svg>
+        </div>
+
+        <!-- TINGKAT 1 & TINGKAT 2: 3 KOLOM CABANG MENYATU (TERPADU) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5" id="treeColumnsContainer">
+            
+            <!-- KOLOM CABANG A -->
+            <div id="branchColA" class="tree-col space-y-3 transition-all duration-500 opacity-20 filter grayscale">
+                <!-- Node Cabang A (Tingkat 1) -->
+                <div id="branchCardA" class="p-4 rounded-2xl border-2 border-sky-500 bg-slate-900 text-sky-100 space-y-2 shadow-lg">
+                    <div class="flex items-center justify-between text-[10px] font-mono">
+                        <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider" id="branchBadgeA">Dimensi 1</span>
+                        <span class="font-bold text-white bg-sky-600 px-1.5 py-0.5 rounded">Cabang A</span>
+                    </div>
+                    <h4 class="font-bold text-white text-sm" id="branchTitleA">Pola & Waktu Kedatangan Murid</h4>
+                    
+                    <!-- Kotak: Mengapa Cabang Ini Dibuat? -->
+                    <div class="p-2.5 rounded-xl bg-sky-950/80 border border-sky-700/60 text-[11px] space-y-1">
+                        <span class="font-bold text-sky-300 flex items-center space-x-1">
+                            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-sky-400"></i>
+                            <span>Mengapa Cabang A Dibuat?</span>
+                        </span>
+                        <p class="text-slate-300 leading-relaxed italic" id="branchWhyA">
+                            Karena lonjakan murid datang serempak pada 5 menit pertama saat bel berbunyi.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Batang Penghubung Vertikal ke Sub-Masalah -->
+                <div class="flex flex-col items-center justify-center py-1">
+                    <div class="w-0.5 h-4 bg-sky-500/60"></div>
+                    <span class="text-[9px] font-mono text-sky-400 font-bold uppercase tracking-wider">↓ Sub-Masalah Operasional ↓</span>
+                </div>
+
+                <!-- Sub-Masalah Operasional Tingkat 2 (Disisipkan Langsung di Bawah Cabang A) -->
+                <div class="space-y-2" id="subContainerA">
+                    <!-- Cards rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- KOLOM CABANG B -->
+            <div id="branchColB" class="tree-col space-y-3 transition-all duration-500 opacity-20 filter grayscale">
+                <!-- Node Cabang B (Tingkat 1) -->
+                <div id="branchCardB" class="p-4 rounded-2xl border-2 border-indigo-500 bg-slate-900 text-indigo-100 space-y-2 shadow-lg">
+                    <div class="flex items-center justify-between text-[10px] font-mono">
+                        <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider" id="branchBadgeB">Dimensi 2</span>
+                        <span class="font-bold text-white bg-indigo-600 px-1.5 py-0.5 rounded">Cabang B</span>
+                    </div>
+                    <h4 class="font-bold text-white text-sm" id="branchTitleB">Efisiensi Layanan & Transaksi Kasir</h4>
+                    
+                    <!-- Kotak: Mengapa Cabang Ini Dibuat? -->
+                    <div class="p-2.5 rounded-xl bg-indigo-950/80 border border-indigo-700/60 text-[11px] space-y-1">
+                        <span class="font-bold text-indigo-300 flex items-center space-x-1">
+                            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-indigo-400"></i>
+                            <span>Mengapa Cabang B Dibuat?</span>
+                        </span>
+                        <p class="text-slate-300 leading-relaxed italic" id="branchWhyB">
+                            Karena meja kasir adalah titik kemacetan utama (bottleneck) pembayaran dan kembalian.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Batang Penghubung Vertikal ke Sub-Masalah -->
+                <div class="flex flex-col items-center justify-center py-1">
+                    <div class="w-0.5 h-4 bg-indigo-500/60"></div>
+                    <span class="text-[9px] font-mono text-indigo-400 font-bold uppercase tracking-wider">↓ Sub-Masalah Operasional ↓</span>
+                </div>
+
+                <!-- Sub-Masalah Operasional Tingkat 2 (Disisipkan Langsung di Bawah Cabang B) -->
+                <div class="space-y-2" id="subContainerB">
+                    <!-- Cards rendered dynamically -->
+                </div>
+            </div>
+
+            <!-- KOLOM CABANG C -->
+            <div id="branchColC" class="tree-col space-y-3 transition-all duration-500 opacity-20 filter grayscale">
+                <!-- Node Cabang C (Tingkat 1) -->
+                <div id="branchCardC" class="p-4 rounded-2xl border-2 border-teal-500 bg-slate-900 text-teal-100 space-y-2 shadow-lg">
+                    <div class="flex items-center justify-between text-[10px] font-mono">
+                        <span class="bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded font-bold uppercase tracking-wider" id="branchBadgeC">Dimensi 3</span>
+                        <span class="font-bold text-white bg-teal-600 px-1.5 py-0.5 rounded">Cabang C</span>
+                    </div>
+                    <h4 class="font-bold text-white text-sm" id="branchTitleC">Alur Fisik & Penataan Jalur Antrean</h4>
+                    
+                    <!-- Kotak: Mengapa Cabang Ini Dibuat? -->
+                    <div class="p-2.5 rounded-xl bg-teal-950/80 border border-teal-700/60 text-[11px] space-y-1">
+                        <span class="font-bold text-teal-300 flex items-center space-x-1">
+                            <i data-lucide="help-circle" class="w-3.5 h-3.5 text-teal-400"></i>
+                            <span>Mengapa Cabang C Dibuat?</span>
+                        </span>
+                        <p class="text-slate-300 leading-relaxed italic" id="branchWhyC">
+                            Karena ruang fisik kantin terbatas dan jalur antre saling bertabrakan dengan jalur keluar.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Batang Penghubung Vertikal ke Sub-Masalah -->
+                <div class="flex flex-col items-center justify-center py-1">
+                    <div class="w-0.5 h-4 bg-teal-500/60"></div>
+                    <span class="text-[9px] font-mono text-teal-400 font-bold uppercase tracking-wider">↓ Sub-Masalah Operasional ↓</span>
+                </div>
+
+                <!-- Sub-Masalah Operasional Tingkat 2 (Disisipkan Langsung di Bawah Cabang C) -->
+                <div class="space-y-2" id="subContainerC">
+                    <!-- Cards rendered dynamically -->
+                </div>
+            </div>
+
+        </div>
+
+        <!-- TINGKAT 3: KESIMPULAN AKAR MASALAH PRIORITAS -->
+        <div id="level3PriorityContainer" class="transition-all duration-500 opacity-0 hidden pt-4 border-t border-slate-800">
+            <div class="bg-gradient-to-r from-amber-950/90 via-yellow-950/70 to-slate-900 p-5 rounded-2xl border-2 border-amber-500 text-white space-y-2 pulse-priority">
+                <div class="flex items-center space-x-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                    <i data-lucide="target" class="w-4 h-4"></i>
+                    <span>Hasil Analisis Dekomposisi: Akar Masalah Prioritas (Critical Bottleneck)</span>
+                </div>
+                <h4 class="text-sm sm:text-base font-black text-amber-200" id="priorityTitle">
+                    Akar Masalah Kunci: Transaksi Tunai dan Kembalian di Jam Puncak (Menit 0-5)
+                </h4>
+                <p class="text-xs text-slate-300 leading-relaxed" id="priorityDesc">
+                    Dari 3 cabang dekomposisi di atas, unit ini menyumbang 65% waktu antrean. Solusi kelompok akan difokuskan membuat sistem "Paket Menu Uang Pas" dan "Jalur Cepat Kasir Khusus" sebelum mengatur tata ruang fisik kantin.
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 5. KOTAK PENJELASAN PEDAGOGIS (DEEP LEARNING INSIGHT)                      -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center space-x-2 text-indigo-700 font-bold text-xs uppercase tracking-wider">
+            <div class="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <i data-lucide="book-open-check" class="w-4 h-4 text-indigo-600"></i>
+            </div>
+            <span id="pedagogyStepTitle">Pelajaran Berpikir Komputasional: Mengapa Memecah Seperti Ini?</span>
+        </div>
+
+        <p id="pedagogyExplanation" class="text-xs sm:text-sm text-slate-700 leading-relaxed bg-indigo-50/40 p-4 rounded-2xl border border-indigo-100">
+            Dekomposisi bukan sekadar membagi orang atau tugas seenaknya. Dekomposisi adalah membedah <strong>struktur masalahnya sendiri</strong> ke bagian-bagian yang independen dan terukur. Ketika masalah sudah diurai sampai Tingkat 2, setiap anggota tim tahu persis apa yang harus diselesaikan!
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-[11px]">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-800 block mb-0.5">🌱 Berkeadaban</span>
+                <span class="text-slate-500">Pembagian tugas kelompok menjadi adil dan transparan tanpa saling menyalahkan.</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-800 block mb-0.5">💡 Bermakna</span>
+                <span class="text-slate-500">Mengurai data nyata sekolah (waktu antrean, volume sampah, beban piket).</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-800 block mb-0.5">✨ Menggembirakan</span>
+                <span class="text-slate-500">Masalah raksasa yang membingungkan menjadi ringan dan jelas solusinya.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 6. FORMULIR TAMBAH SUB-MASALAH BARU SECARA MANDIRI                        -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div>
+            <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-2">
+                <i data-lucide="plus-circle" class="w-4 h-4 text-teal-600"></i>
+                <span>Tantangan Mandiri: Tambahkan Sub-Masalah Kustom Kamu Sendiri</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-1">
+                Punya ide sub-masalah lain? Masukkan langsung ke bawah Cabang A, B, atau C untuk melihat sub-masalah tersebut tersisip di kolom yang tepat.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Sisipkan di Bawah Cabang:</label>
+                <select id="customBranchParent" class="w-full p-2.5 rounded-xl border border-slate-300 font-semibold bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Tulis Sub-Masalah Operasional Baru:</label>
+                <input type="text" id="customSubText" placeholder="Contoh: Mengatur menu pre-order via WA sebelum bel..." class="w-full p-2.5 rounded-xl border border-slate-300 font-semibold bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div class="flex items-end">
+                <button type="button" onclick="addCustomSubProblem()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow flex items-center justify-center space-x-1.5">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Tambahkan ke Pohon</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 7. TOMBOL SIMPAN & SELESAIKAN LAB SIMULASI 1                              -->
+    <!-- ========================================================================= -->
+    <div class="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 flex flex-col sm:flex-row justify-between items-center gap-4 shadow-sm">
+        <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-md">
+                ✓
+            </div>
+            <div>
+                <h4 class="font-bold text-emerald-950 text-sm sm:text-base">Sudah Memahami Konsep Dekomposisi Bertingkat?</h4>
+                <p class="text-xs text-emerald-800 mt-0.5">
+                    Klik tombol di samping untuk menyimpan capaian simulasi Anda ke sistem dan melanjutkan ke pengerjaan LKPD 1.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" action="/siswa/simulasi/selesai/pohon_dekomposisi" class="shrink-0 w-full sm:w-auto">
+            <input type="hidden" name="lesson_id" value="1">
+            <button type="submit" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span>Simpan Capaian & Lanjut ke LKPD 1</span>
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // =========================================================================
+    // DATA 3 SKENARIO AUTENTIK: CABANG + ALASAN MENGAPA DIBUAT + SUB LANGSUNG
+    // =========================================================================
+    const scenarios = {
+        kantin: {
+            name: "Antrean Panjang Kasir Kantin Sekolah",
+            tag: "Latar Belakang Kasus: Antrean Kantin Sekolah (Studi Kasus Rani & Dimas)",
+            desc: "Bel istirahat 20 menit berbunyi. Sebanyak 180 siswa SMA serempak menuju kantin. Antrean kasir mengular panjang hingga ke lorong kelas, membuat Rani dan Dimas kehabisan waktu istirahat dan belum sempat makan saat bel masuk berbunyi.",
+            goal: "Mengurangi waktu tunggu antrean dari 15 menit menjadi maksimal 3 menit per murid.",
+            rootTitle: "Mengurangi Waktu Tunggu Antrean Kasir Kantin dari 15 Menit Menjadi 3 Menit",
+            branches: [
+                {
+                    id: "A",
+                    letter: "A",
+                    title: "Pola & Waktu Kedatangan Murid",
+                    badge: "Dimensi 1: Waktu & Pola",
+                    why: "Karena antrean tidak datang merata, melainkan menumpuk serentak pada 5 menit pertama saat bel berbunyi. Tanpa membedah pola jam puncak dan menu terlaris, kasir tidak bisa mengantisipasi lonjakan.",
+                    colorBorder: "border-sky-500",
+                    colorBadge: "bg-sky-500/20 text-sky-300",
+                    colorTag: "bg-sky-600",
+                    subs: [
+                        { code: "A.1", text: "Mengukur lonjakan siswa pada menit ke-0 s.d 5 bel istirahat.", priority: false },
+                        { code: "A.2", text: "Mendata 3 menu makanan paling laris yang dipesan saat jam sibuk.", priority: false }
+                    ]
+                },
+                {
+                    id: "B",
+                    letter: "B",
+                    title: "Efisiensi Layanan & Transaksi Kasir",
+                    badge: "Dimensi 2: Layanan Kasir",
+                    why: "Karena meja kasir adalah titik kemacetan utama (bottleneck). Lama waktu transaksi uang tunai dan menghitung kembalian adalah variabel proses yang paling menentukan laju aliran antrean.",
+                    colorBorder: "border-indigo-500",
+                    colorBadge: "bg-indigo-500/20 text-indigo-300",
+                    colorTag: "bg-indigo-600",
+                    subs: [
+                        { code: "B.1", text: "Mengukur durasi transaksi uang tunai & kembalian per siswa (rata-rata 45 detik).", priority: true },
+                        { code: "B.2", text: "Menerapkan sistem menu paket harga bulat (misal Serba Rp 10.000) agar minim kembalian.", priority: true },
+                        { code: "B.3", text: "Membuka kasir kilat ekstra khusus uang pas di jam sibuk.", priority: false }
+                    ]
+                },
+                {
+                    id: "C",
+                    letter: "C",
+                    title: "Alur Fisik & Penataan Jalur Antrean",
+                    badge: "Dimensi 3: Tata Ruang",
+                    why: "Karena ruang fisik kantin terbatas. Murid yang mengantre, yang sedang melihat menu, dan yang membawa makanan panas sering saling bertabrakan jika alur masuk dan keluar tidak dipisahkan.",
+                    colorBorder: "border-teal-500",
+                    colorBadge: "bg-teal-500/20 text-teal-300",
+                    colorTag: "bg-teal-600",
+                    subs: [
+                        { code: "C.1", text: "Memisahkan jalur antrean pemesanan dengan jalur pengambilan makanan.", priority: false },
+                        { code: "C.2", text: "Memasang papan menu & harga 5 meter sebelum kasir agar murid sudah siap memutuskan pesanan.", priority: false }
+                    ]
+                }
+            ],
+            priorityTitle: "Akar Masalah Kunci: Transaksi Tunai dan Kembalian di Jam Puncak (Menit 0-5)",
+            priorityDesc: "Hasil uji dekomposisi menunjukkan bahwa 65% waktu terbuang saat kasir menghitung uang kembalian. Solusi prioritas kelompok difokuskan pada paket harga bulat (B.2) dan kasir uang pas (B.3) sebelum menata ruang fisik.",
+            pedagogy: [
+                "Langkah 1: Masalah didefinisikan secara kuantitatif: bukan hanya mengeluh 'kantin lambat', melainkan target terukur 'menurunkan antrean dari 15 menit ke 3 menit'.",
+                "Langkah 2: Cabang A dibuat untuk mengisolasi variabel kedatangan murid (kapan dan apa yang dicari). Sub-masalah A.1 & A.2 langsung disisipkan di bawahnya untuk menyelidiki data jam sibuk.",
+                "Langkah 3: Cabang B dibuat untuk membedah proses di meja kasir. Sub-masalah B.1, B.2, B.3 langsung disisipkan di bawahnya karena kecepatan kasir adalah variabel independen dari kedatangan murid.",
+                "Langkah 4: Cabang C dibuat untuk menata aliran fisik ruang. Sub-masalah C.1 & C.2 langsung disisipkan di bawahnya agar antrean tidak saling menghambat secara fisik.",
+                "Langkah 5: Seluruh graf terhubung utuh! Tim menemukan titik sumbatan terbesar (transaksi tunai kembalian pada Cabang B) sebagai target aksi prioritas!"
+            ]
+        },
+        sampah: {
+            name: "Penumpukan Sampah Kantin Sekolah Tidak Terpilah",
+            tag: "Latar Belakang Kasus: Pengelolaan Sampah Sekolah yang Menumpuk",
+            desc: "Seusai jam istirahat kedua, tempat sampah di lorong kelas dan kantin meluber. Plastik kresek, botol air mineral, dan sisa makanan tercampur baur sehingga kotor, menimbulkan aroma tidak sedap, dan menyulitkan petugas kebersihan.",
+            goal: "Mereduksi volume sampah plastik dan meningkatkan akurasi pemilahan organik vs anorganik dari 25% ke 80%.",
+            rootTitle: "Mereduksi Sampah Plastik & Menaikkan Kepatuhan Pemilahan Sampah Sekolah Menjadi 80%",
+            branches: [
+                {
+                    id: "A",
+                    letter: "A",
+                    title: "Sumber Timbunan & Produksi Sampah",
+                    badge: "Dimensi 1: Sumber Timbunan",
+                    why: "Karena untuk menghentikan banjir sampah, kita harus tahu keran utamanya: siapa yang memproduksi sampah terbesar (penjual vs siswa) dan apa jenis sampah dominan (plastik sekali pakai vs sisa makanan).",
+                    colorBorder: "border-emerald-500",
+                    colorBadge: "bg-emerald-500/20 text-emerald-300",
+                    colorTag: "bg-emerald-600",
+                    subs: [
+                        { code: "A.1", text: "Menghitung proporsi sampah kemasan plastik sekali pakai vs sisa makanan organik.", priority: false },
+                        { code: "A.2", text: "Mendata stan penjual kantin yang masih menggunakan kemasan kantong plastik berlebih.", priority: false }
+                    ]
+                },
+                {
+                    id: "B",
+                    letter: "B",
+                    title: "Sarana, Penempatan & Label Wadah Pilah",
+                    badge: "Dimensi 2: Wadah Sampah",
+                    why: "Karena siswa tidak bisa memilah jika wadahnya tidak ada, tidak terjangkau, atau labelnya pudar/membingungkan. Ketersediaan sarana visual adalah prasyarat keberhasilan.",
+                    colorBorder: "border-teal-500",
+                    colorBadge: "bg-teal-500/20 text-teal-300",
+                    colorTag: "bg-teal-600",
+                    subs: [
+                        { code: "B.1", text: "Memeriksa ketersediaan tempat sampah 3 warna (Organik, Anorganik, Residu) di tiap lorong kelas.", priority: false },
+                        { code: "B.2", text: "Mengganti label tulisan yang pudar dengan stiker visual gambar contoh sampah nyata.", priority: true }
+                    ]
+                },
+                {
+                    id: "C",
+                    letter: "C",
+                    title: "Regulasi, Budaya & Pengawasan Siswa",
+                    badge: "Dimensi 3: Budaya Sekolah",
+                    why: "Karena penyediaan tempat sampah saja tidak cukup jika tidak ada pembiasaan dan regulasi bersama. Siswa butuh insentif positif untuk mengurangi plastik sekali pakai dari hulu.",
+                    colorBorder: "border-indigo-500",
+                    colorBadge: "bg-indigo-500/20 text-indigo-300",
+                    colorTag: "bg-indigo-600",
+                    subs: [
+                        { code: "C.1", text: "Mengkampanyekan gerakan 'Bawa Tumbler & Wadah Makan Sendiri' berhadiah poin kebersihan kelas.", priority: true },
+                        { code: "C.2", text: "Menjadwalkan piket harian Duta Lingkungan di area kantin saat jam istirahat.", priority: false }
+                    ]
+                }
+            ],
+            priorityTitle: "Akar Masalah Kunci: Label Tong Sampah Membingungkan & Ketergantungan Wadah Sekali Pakai",
+            priorityDesc: "Siswa mau memilah tetapi ragu karena label tong hanya teks tanpa gambar. Solusi prioritas: stiker visual contoh nyata pada tong sampah (B.2) dan gerakan tumbler berhadiah poin (C.1).",
+            pedagogy: [
+                "Langkah 1: Masalah didefinisikan secara kuantitatif: bukan hanya 'sekolah kita jorok', melainkan target jelas 'meningkatkan pemilahan terpilah dari 25% ke 80%'.",
+                "Langkah 2: Cabang A dibuat untuk membedah hulu sampah (proporsi plastik vs makanan). Sub-masalah A.1 & A.2 langsung disisipkan di bawahnya.",
+                "Langkah 3: Cabang B dibuat untuk membedah fasilitas wadah. Sub-masalah B.1 & B.2 langsung disisipkan di bawahnya.",
+                "Langkah 4: Cabang C dibuat untuk mengkaji kebiasaan dan aturan siswa. Sub-masalah C.1 & C.2 langsung disisipkan di bawahnya.",
+                "Langkah 5: Tim menemukan akar masalah konkret: label visual dan pengurangan plastik di hulu!"
+            ]
+        },
+        piket: {
+            name: "Pelaksanaan Piket Kebersihan Kelas Sering Terabaikan",
+            tag: "Latar Belakang Kasus: Piket Kebersihan Kelas yang Sering Diabaikan",
+            desc: "Banyak regu piket kelas yang langsung pulang begitu bel akhir berbunyi. Papan tulis sering kotor saat guru jam pertama datang, kolong meja penuh bungkus jajanan, dan hanya 1 siswa rajin yang akhirnya mengerjakan sendirian.",
+            goal: "Memastikan 100% regu piket harian bekerja secara merata dan selesai dalam maksimal 12 menit.",
+            rootTitle: "Memastikan 100% Regu Piket Harian Bekerja Merata dan Selesai dalam 12 Menit",
+            branches: [
+                {
+                    id: "A",
+                    letter: "A",
+                    title: "Manajemen Waktu & Pembagian Peran Kerja",
+                    badge: "Dimensi 1: Manajemen Waktu",
+                    why: "Karena saat bel pulang berbunyi, siswa terburu-buru mengejar angkutan atau lelah. Jika pembagian peran tidak jelas sejak awal, mereka akan saling menunggu dan akhirnya kabur pulang.",
+                    colorBorder: "border-amber-500",
+                    colorBadge: "bg-amber-500/20 text-amber-300",
+                    colorTag: "bg-amber-600",
+                    subs: [
+                        { code: "A.1", text: "Membagi peran spesifik: 2 orang papan & meja guru, 2 orang sapu lantai, 1 orang buang sampah.", priority: true },
+                        { code: "A.2", text: "Menjadwalkan piket ringan 5 menit sebelum bel pagi dan piket tuntas saat bel pulang sekolah.", priority: false }
+                    ]
+                },
+                {
+                    id: "B",
+                    letter: "B",
+                    title: "Kelayakan Sarana & Penataan Alat Kebersihan",
+                    badge: "Dimensi 2: Sarana Alat",
+                    why: "Karena siswa sering beralasan tidak piket karena sapunya patah/rontok, kain pelnya bau/hilang, atau tidak ada tempat simpan yang rapi. Ketersediaan alat adalah faktor penentu eksekusi.",
+                    colorBorder: "border-orange-500",
+                    colorBadge: "bg-orange-500/20 text-orange-300",
+                    colorTag: "bg-orange-600",
+                    subs: [
+                        { code: "B.1", text: "Memeriksa kelayakan sapu (tidak rontok) dan kain pel yang bersih layak pakai.", priority: false },
+                        { code: "B.2", text: "Menyediakan lemari gantung di belakang kelas agar alat piket tidak berserakan atau tertukar.", priority: false }
+                    ]
+                },
+                {
+                    id: "C",
+                    letter: "C",
+                    title: "Sistem Kontrol, Checklist & Apresiasi",
+                    badge: "Dimensi 3: Kontrol & Reward",
+                    why: "Karena tanpa pencatatan dan evaluasi yang transparan, siswa rajin merasa dirugikan sedangkan yang kabur merasa tidak ada konsekuensi.",
+                    colorBorder: "border-rose-500",
+                    colorBadge: "bg-rose-500/20 text-rose-300",
+                    colorTag: "bg-rose-600",
+                    subs: [
+                        { code: "C.1", text: "Membuat kartu checklist piket harian yang diverifikasi dan ditandatangani Ketua Kelas / Wali Kelas.", priority: true },
+                        { code: "C.2", text: "Sistem reward stiker bintang mingguan untuk regu piket paling rapi di mading kelas.", priority: false }
+                    ]
+                }
+            ],
+            priorityTitle: "Akar Masalah Kunci: Peran Kerja Tidak Spesifik dan Lemahnya Lembar Kontrol Harian",
+            priorityDesc: "Siswa melalaikan piket bukan karena malas, tetapi karena tidak ada pembagian peran yang spesifik sehingga saling menunggu. Solusi prioritas: kartu peran kerja terarah (A.1) dan verifikasi checklist ketua kelas (C.1).",
+            pedagogy: [
+                "Langkah 1: Target yang jelas: waktu kerja piket tuntas 12 menit dan seluruh anggota terlibat aktif.",
+                "Langkah 2: Cabang A dibuat untuk mengatur pembagian kerja spesifik (bukan sekadar daftar nama orang). Sub-masalah A.1 & A.2 disisipkan langsung di bawahnya.",
+                "Langkah 3: Cabang B dibuat untuk memastikan kelayakan sarana alat piket. Sub-masalah B.1 & B.2 disisipkan langsung di bawahnya.",
+                "Langkah 4: Cabang C dibuat untuk sistem kontrol dan reward. Sub-masalah C.1 & C.2 disisipkan langsung di bawahnya.",
+                "Langkah 5: Titik keberhasilan ditemukan: kejelasan peran individu (Role Clarity) dan lembar verifikasi harian!"
+            ]
+        }
+    };
+
+    // =========================================================================
+    // STATE & CONTROLLER
+    // =========================================================================
+    let currentScenarioKey = 'kantin';
+    let currentStep = 0; // 0, 1, 2, 3, 4
+    let isPlaying = false;
+    let playTimer = null;
+    let animSpeed = 2800;
+
+    function selectScenario(key) {
+        currentScenarioKey = key;
+        
+        document.querySelectorAll('.scenario-card').forEach(c => {
+            c.classList.remove('border-indigo-600', 'border-emerald-600', 'border-amber-600', 'shadow-md', 'ring-2', 'ring-indigo-200', 'ring-emerald-200', 'ring-amber-200');
+            c.classList.add('border-slate-200');
+        });
+        document.querySelectorAll('.active-badge').forEach(b => b.classList.add('hidden'));
+
+        const activeCard = document.getElementById('cardScenario' + key.charAt(0).toUpperCase() + key.slice(1));
+        if (activeCard) {
+            activeCard.classList.remove('border-slate-200');
+            if (key === 'kantin') {
+                activeCard.classList.add('border-indigo-600', 'shadow-md', 'ring-2', 'ring-indigo-200');
+            } else if (key === 'sampah') {
+                activeCard.classList.add('border-emerald-600', 'shadow-md', 'ring-2', 'ring-emerald-200');
+            } else {
+                activeCard.classList.add('border-amber-600', 'shadow-md', 'ring-2', 'ring-amber-200');
+            }
+            const badge = activeCard.querySelector('.active-badge');
+            if (badge) badge.classList.remove('hidden');
+        }
+
+        const sc = scenarios[key];
+        if (!sc) return;
+
+        document.getElementById('scenarioContextTag').innerText = sc.tag;
+        document.getElementById('scenarioContextDesc').innerText = `"${sc.desc}"`;
+        document.getElementById('scenarioContextGoal').innerText = sc.goal;
+        document.getElementById('rootCardTitle').innerText = sc.rootTitle;
+        document.getElementById('priorityTitle').innerText = sc.priorityTitle;
+        document.getElementById('priorityDesc').innerText = sc.priorityDesc;
+
+        // Update Labels in Stepper
+        document.getElementById('stepLabel1').innerText = `Cabang A (${sc.branches[0].title.split(' ')[0]}...)`;
+        document.getElementById('stepLabel2').innerText = `Cabang B (${sc.branches[1].title.split(' ')[0]}...)`;
+        document.getElementById('stepLabel3').innerText = `Cabang C (${sc.branches[2].title.split(' ')[0]}...)`;
+
+        // Render Branch Cards Static Info
+        ['A', 'B', 'C'].forEach((letter, idx) => {
+            const b = sc.branches[idx];
+            document.getElementById('branchBadge' + letter).innerText = b.badge;
+            document.getElementById('branchTitle' + letter).innerText = b.title;
+            document.getElementById('branchWhy' + letter).innerText = b.why;
+        });
+
+        // Populate Custom Branch Selector
+        const branchSelect = document.getElementById('customBranchParent');
+        if (branchSelect) {
+            branchSelect.innerHTML = sc.branches.map((b, idx) => `
+                <option value="${idx}">Di Bawah Cabang ${b.letter}: ${b.title}</option>
+            `).join('');
+        }
+
+        pauseAnimation();
+        goToStep(0);
+    }
+
+    function renderStepView() {
+        const sc = scenarios[currentScenarioKey];
+        if (!sc) return;
+
+        // 1. Update Stepper Pills (0 to 4)
+        for (let i = 0; i <= 4; i++) {
+            const pill = document.getElementById('stepBtn' + i);
+            if (pill) {
+                if (i === currentStep) {
+                    pill.className = "step-pill p-2 rounded-xl border text-left transition font-semibold bg-indigo-600 text-white border-indigo-600 shadow-sm";
+                } else if (i < currentStep) {
+                    pill.className = "step-pill p-2 rounded-xl border text-left transition font-semibold bg-emerald-50 text-emerald-800 border-emerald-300";
+                } else {
+                    pill.className = "step-pill p-2 rounded-xl border text-left transition font-semibold bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100";
+                }
+            }
+        }
+
+        // 2. Update Progress fill & Step counter
+        const progressEl = document.getElementById('animProgressFill');
+        if (progressEl) {
+            progressEl.style.width = ((currentStep + 1) * 20) + '%';
+        }
+        document.getElementById('stepCounterText').innerText = `Langkah ${currentStep + 1} dari 5`;
+
+        // 3. Status text & Pedagogy explanation
+        const statusMap = [
+            "Langkah 1: Identifikasi Akar Masalah Utama (Tingkat 0)",
+            `Langkah 2: Mengurai Cabang A (${sc.branches[0].title}) & Sub-Masalahnya`,
+            `Langkah 3: Mengurai Cabang B (${sc.branches[1].title}) & Sub-Masalahnya`,
+            `Langkah 4: Mengurai Cabang C (${sc.branches[2].title}) & Sub-Masalahnya`,
+            "Langkah 5: Graf Pohon Terpadu Utuh & Penetapan Akar Masalah Prioritas"
+        ];
+        document.getElementById('canvasStatusText').innerText = statusMap[currentStep];
+        document.getElementById('pedagogyStepTitle').innerText = `Pelajaran Berpikir Komputasional (Langkah ${currentStep + 1}):`;
+        document.getElementById('pedagogyExplanation').innerText = sc.pedagogy[currentStep];
+
+        // 4. Update Graphic Columns & SVG lines
+        const colA = document.getElementById('branchColA');
+        const colB = document.getElementById('branchColB');
+        const colC = document.getElementById('branchColC');
+
+        const lineA = document.getElementById('svgBranchA');
+        const lineB = document.getElementById('svgBranchB');
+        const lineC = document.getElementById('svgBranchC');
+
+        const prioContainer = document.getElementById('level3PriorityContainer');
+
+        // Helper to set column state
+        function setColState(col, line, isVisible, isActive) {
+            if (isVisible) {
+                col.classList.remove('opacity-20', 'filter', 'grayscale');
+                col.classList.add('opacity-100');
+                if (isActive) {
+                    col.classList.add('ring-2', 'ring-indigo-400/50', 'rounded-2xl');
+                } else {
+                    col.classList.remove('ring-2', 'ring-indigo-400/50', 'rounded-2xl');
+                }
+                if (line) {
+                    line.setAttribute('stroke', '#6366f1');
+                    line.setAttribute('stroke-width', '2.5');
+                }
+            } else {
+                col.classList.remove('opacity-100', 'ring-2', 'ring-indigo-400/50', 'rounded-2xl');
+                col.classList.add('opacity-20', 'filter', 'grayscale');
+                if (line) {
+                    line.setAttribute('stroke', '#334155');
+                    line.setAttribute('stroke-width', '1.5');
+                }
+            }
+        }
+
+        // Render Sub-Problems inside each column
+        renderSubProblems('A', sc.branches[0], currentStep >= 1, currentStep === 4);
+        renderSubProblems('B', sc.branches[1], currentStep >= 2, currentStep === 4);
+        renderSubProblems('C', sc.branches[2], currentStep >= 3, currentStep === 4);
+
+        if (currentStep === 0) {
+            setColState(colA, lineA, false, false);
+            setColState(colB, lineB, false, false);
+            setColState(colC, lineC, false, false);
+            prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 1) {
+            setColState(colA, lineA, true, true);
+            setColState(colB, lineB, false, false);
+            setColState(colC, lineC, false, false);
+            prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 2) {
+            setColState(colA, lineA, true, false);
+            setColState(colB, lineB, true, true);
+            setColState(colC, lineC, false, false);
+            prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 3) {
+            setColState(colA, lineA, true, false);
+            setColState(colB, lineB, true, false);
+            setColState(colC, lineC, true, true);
+            prioContainer.classList.add('hidden', 'opacity-0');
+        } else if (currentStep === 4) {
+            setColState(colA, lineA, true, false);
+            setColState(colB, lineB, true, false);
+            setColState(colC, lineC, true, false);
+            prioContainer.classList.remove('hidden');
+            setTimeout(() => prioContainer.classList.remove('opacity-0'), 50);
+        }
+
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    }
+
+    function renderSubProblems(letter, branch, isVisible, showPriorityHighlight) {
+        const container = document.getElementById('subContainer' + letter);
+        if (!container) return;
+
+        if (!isVisible) {
+            container.innerHTML = `
+                <div class="p-3 rounded-xl border border-dashed border-slate-800 text-[11px] text-slate-600 text-center italic">
+                    Sub-masalah belum diurai
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = branch.subs.map((s, idx) => `
+            <div class="p-3 rounded-xl border text-xs node-anim transition-all duration-300 ${showPriorityHighlight && s.priority ? 'bg-amber-950/80 border-amber-400 text-amber-100 pulse-priority font-semibold shadow-lg' : 'bg-slate-900 border-slate-700/80 text-slate-200'}" style="animation-delay: ${idx * 0.12}s">
+                <div class="flex items-start justify-between gap-1.5">
+                    <span class="leading-relaxed"><strong class="text-indigo-300 font-mono">[${s.code || (letter + '.' + (idx+1))}]</strong> ${s.text}</span>
+                    ${showPriorityHighlight && s.priority ? '<span class="bg-amber-400 text-slate-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 shadow">Akar Kunci</span>' : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // =========================================================================
+    // STEPPER CONTROLS
+    // =========================================================================
+    function goToStep(step) {
+        currentStep = Math.max(0, Math.min(4, step));
+        renderStepView();
+    }
+
+    function nextStep() {
+        if (currentStep < 4) {
+            goToStep(currentStep + 1);
+        } else {
+            if (isPlaying) pauseAnimation();
+        }
+    }
+
+    function prevStep() {
+        if (currentStep > 0) goToStep(currentStep - 1);
+    }
+
+    function resetAnimation() {
+        pauseAnimation();
+        goToStep(0);
+    }
+
+    function togglePlayPause() {
+        if (isPlaying) {
+            pauseAnimation();
+        } else {
+            startAnimation();
+        }
+    }
+
+    function startAnimation() {
+        isPlaying = true;
+        const textEl = document.getElementById('textPlay');
+        if (textEl) textEl.innerText = "Jeda Animasi";
+        const icon = document.getElementById('iconPlay');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'pause');
+            lucide.createIcons();
+        }
+
+        if (currentStep === 4) {
+            currentStep = 0;
+            renderStepView();
+        }
+
+        playTimer = setInterval(() => {
+            if (currentStep < 4) {
+                nextStep();
+            } else {
+                pauseAnimation();
+            }
+        }, animSpeed);
+    }
+
+    function pauseAnimation() {
+        isPlaying = false;
+        if (playTimer) {
+            clearInterval(playTimer);
+            playTimer = null;
+        }
+        const textEl = document.getElementById('textPlay');
+        if (textEl) textEl.innerText = "Putar Animasi Berurutan";
+        const icon = document.getElementById('iconPlay');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+        }
+    }
+
+    function changeSpeed() {
+        animSpeed = parseInt(document.getElementById('animSpeedSelect').value) || 2800;
+        if (isPlaying) {
+            pauseAnimation();
+            startAnimation();
+        }
+    }
+
+    // =========================================================================
+    // CUSTOM SUB-PROBLEM ADDER (DISISIPKAN LANGSUNG KE CABANG PILIHAN)
+    // =========================================================================
+    function addCustomSubProblem() {
+        const branchIdx = parseInt(document.getElementById('customBranchParent').value);
+        const input = document.getElementById('customSubText');
+        const text = input.value.trim();
+
+        if (!text) {
+            alert('Silakan ketikkan sub-masalah operasional Anda terlebih dahulu!');
+            return;
+        }
+
+        const sc = scenarios[currentScenarioKey];
+        if (sc && sc.branches[branchIdx]) {
+            const letter = sc.branches[branchIdx].letter;
+            const newIndex = sc.branches[branchIdx].subs.length + 1;
+            sc.branches[branchIdx].subs.push({
+                code: letter + '.' + newIndex,
+                text: text + " (Oleh Siswa)",
+                priority: false
+            });
+            input.value = '';
+            alert('Bagus! Sub-masalah baru berhasil disisipkan tepat di bawah Cabang ' + letter + ' (' + sc.branches[branchIdx].title + '). Menampilkan sekarang.');
+            
+            // Jump to that branch step or step 4
+            goToStep(branchIdx + 1);
+        }
+    }
+
+    // =========================================================================
+    // INITIALIZATION
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        selectScenario('kantin');
+    });
+</script>
+{% endblock %}

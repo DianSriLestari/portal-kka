@@ -1,0 +1,167 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Hasil {{ quiz.title }} - Portal KKA{% endblock %}
+
+{% block content %}
+<div class="max-w-lg mx-auto py-8 space-y-5">
+
+    <!-- Alert Messages -->
+    {% if msg %}
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-xs">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+        <span class="font-medium">{{ msg }}</span>
+    </div>
+    {% endif %}
+
+    {% if err %}
+    <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-xs">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+        <span class="font-medium">{{ err }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Main Results Card -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-xl text-center space-y-5">
+        
+        <!-- Score Circle -->
+        <div class="w-28 h-28 mx-auto rounded-3xl flex flex-col items-center justify-center font-black shadow-inner {% if score > 75 %}bg-emerald-50 text-emerald-600 border-2 border-emerald-300 ring-4 ring-emerald-100{% else %}bg-amber-50 text-amber-600 border-2 border-amber-300 ring-4 ring-amber-100{% endif %}">
+            <span class="text-3xl leading-none">{{ score }}</span>
+            <span class="text-[10px] text-slate-400 font-bold uppercase mt-1">/ 100 Poin</span>
+        </div>
+
+        <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Hasil Evaluasi {{ quiz.quiz_type }}</span>
+            <h2 class="text-lg sm:text-xl font-black text-slate-800 mt-1">{{ quiz.title }}</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Kriteria Ketuntasan Minimal (KKM): <strong class="text-indigo-700">Skor > 75</strong></p>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-2 gap-3 text-xs text-left">
+            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
+                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Jawaban Benar</span>
+                <span class="font-black text-slate-800 text-sm mt-0.5 block">{{ correct }} dari {{ total }} Soal</span>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-slate-100 shadow-2xs">
+                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Status Kelulusan</span>
+                {% if score > 75 %}
+                    <span class="font-black text-emerald-600 text-sm mt-0.5 block flex items-center space-x-1">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>Lulus KKM</span>
+                    </span>
+                {% else %}
+                    <span class="font-black text-rose-600 text-sm mt-0.5 block flex items-center space-x-1">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        <span>Belum Tuntas</span>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Feedback Narrative -->
+        <div class="p-4 rounded-2xl text-xs leading-relaxed {% if score > 75 %}bg-emerald-50/70 border border-emerald-100 text-emerald-800{% else %}bg-amber-50/70 border border-amber-100 text-amber-800{% endif %}">
+            {% if score > 75 %}
+                🎉 <strong>Luar Biasa!</strong> Anda telah mencapai batas tuntas KKM (>75) dan menguasai materi algoritma, flowchart percabangan, serta uji telusur dry-run dengan sangat baik. Silakan lanjutkan ke pengisian <strong>Jurnal Refleksi</strong>.
+            {% else %}
+                ⚠️ <strong>Perhatian:</strong> Skor Anda saat ini (<strong>{{ score }}</strong>) belum mencapai ambang kelulusan KKM yaitu <strong>skor > 75</strong>. Sesuai ketentuan, ujian hanya dapat dikerjakan 1 kali kecuali diberikan izin perbaikan (remedial) oleh Guru pengampu.
+            {% endif %}
+        </div>
+
+        <!-- Remedial / Lapor Guru Section (Only for score <= 75 on Exam) -->
+        {% if quiz.quiz_type == 'ujian' and score <= 75 %}
+        <div class="border-t border-slate-100 pt-5 text-left space-y-3">
+            <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
+                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                </div>
+                <h4 class="font-bold text-slate-800 text-xs sm:text-sm">Alur Permohonan Remedial (Perbaikan Ujian)</h4>
+            </div>
+
+            {% if not remedial_req %}
+                <!-- Form Ajukan Permohonan ke Guru -->
+                <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-3">
+                    <p class="text-xs text-slate-600">
+                        Klik tombol di bawah ini untuk mengirimkan laporan kepada Guru pengampu agar diberikan <strong>1 kali kesempatan lagi</strong> untuk mencoba mengulang Ujian Sumatif Unit 1.
+                    </p>
+                    <form action="/siswa/kuis/{{ quiz.id }}/remedial-request" method="POST" class="space-y-2.5">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-700 mb-1">Catatan Tambahan untuk Guru (Opsional):</label>
+                            <input type="text" name="student_notes" placeholder="Misal: Saya ingin mencoba lagi setelah meninjau kembali simbol percabangan..." class="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-md shadow-indigo-100 transition text-xs flex items-center justify-center space-x-2">
+                            <i data-lucide="bell" class="w-4 h-4"></i>
+                            <span>📢 Lapor ke Guru (Ajukan Permohonan Remedial)</span>
+                        </button>
+                    </form>
+                </div>
+
+            {% elif remedial_req.status == 'pending' %}
+                <!-- Status Pending -->
+                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2">
+                    <div class="flex items-center space-x-2 font-bold text-amber-800">
+                        <i data-lucide="clock" class="w-4 h-4 text-amber-600 animate-spin"></i>
+                        <span>Permohonan Remedial Telah Terkirim</span>
+                    </div>
+                    <p class="text-[11px] text-amber-700">
+                        Laporan permohonan perbaikan telah diteruskan ke Guru pengampu pada <strong>{{ remedial_req.created_at[0:16] }}</strong>. Silakan tunggu konfirmasi persetujuan dari Bapak/Ibu Guru.
+                    </p>
+                </div>
+
+            {% elif remedial_req.status == 'approved' and remedial_req.used == 0 %}
+                <!-- Status Approved & Belum Digunakan -->
+                <div class="bg-emerald-50 p-4 rounded-2xl border-2 border-emerald-300 text-xs text-emerald-900 space-y-3 shadow-xs">
+                    <div class="flex items-center space-x-2 font-black text-emerald-700">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+                        <span>Izin Perbaikan Disetujui oleh Guru!</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-800 leading-relaxed">
+                        Bapak/Ibu Guru telah menyetujui permohonan remedial Anda. Anda diberikan <strong>1 kesempatan terakhir</strong> untuk mengerjakan kembali Ujian Sumatif Unit 1.
+                    </p>
+                    {% if remedial_req.teacher_notes %}
+                    <p class="text-[11px] bg-white p-2.5 rounded-xl border border-emerald-200 text-emerald-900 italic">
+                        "Pesan Guru: {{ remedial_req.teacher_notes }}"
+                    </p>
+                    {% endif %}
+                    <a href="/siswa/kuis/{{ quiz.id }}" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 px-4 rounded-xl shadow-md shadow-emerald-200 transition text-xs flex items-center justify-center space-x-2">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span>Mulai Ujian Remedial (Kesempatan ke-2) &rarr;</span>
+                    </a>
+                </div>
+
+            {% elif remedial_req.status == 'approved' and remedial_req.used >= 1 %}
+                <!-- Status Sudah Dipakai -->
+                <div class="bg-slate-100 p-4 rounded-2xl border border-slate-200 text-xs text-slate-700 space-y-1">
+                    <span class="font-bold block text-slate-800">Kesempatan Remedial Selesai</span>
+                    <p class="text-[11px] text-slate-500">
+                        Anda telah menyelesaikan seluruh kesempatan pengerjaan ujian sumatif (1x reguler + 1x remedial). Nilai akhir telah tercatat di buku rapor guru.
+                    </p>
+                </div>
+
+            {% elif remedial_req.status == 'rejected' %}
+                <!-- Status Rejected -->
+                <div class="bg-rose-50 p-4 rounded-2xl border border-rose-200 text-xs text-rose-800 space-y-1">
+                    <span class="font-bold block text-rose-900">Permohonan Tidak Disetujui</span>
+                    <p class="text-[11px] text-rose-700">
+                        Guru belum mengizinkan remedial untuk saat ini. Silakan berkonsultasi langsung dengan Bapak/Ibu Guru.
+                    </p>
+                </div>
+            {% endif %}
+
+        </div>
+        {% endif %}
+
+        <!-- Navigation Buttons -->
+        <div class="pt-3 flex flex-col sm:flex-row gap-2">
+            <a href="/siswa" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-3 px-4 rounded-xl transition block text-xs">
+                &larr; Beranda Belajar
+            </a>
+            {% if score > 75 %}
+            <a href="/siswa/refleksi" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition block text-xs">
+                Isi Jurnal Refleksi &rarr;
+            </a>
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

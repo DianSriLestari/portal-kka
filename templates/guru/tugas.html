@@ -1,0 +1,488 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kelola Tugas & LKPD - Portal KKA Fase E{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800">Pemeriksaan Tugas & LKPD Siswa</h1>
+            <p class="text-xs text-slate-500 mt-1">Periksa dokumen pemecahan masalah, rancangan pohon dekomposisi, dan flowchart hasil kerja kelompok.</p>
+        </div>
+    </div>
+
+    {% if msg %}
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+        <span>{{ msg }}</span>
+    </div>
+    {% endif %}
+
+    <!-- LKPD Master List -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {% for a in assignments %}
+        <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-indigo-600 uppercase bg-indigo-50 px-2 py-0.5 rounded">
+                    Pertemuan {{ a.meeting_number }}
+                </span>
+                <h3 class="font-bold text-slate-800 text-sm mt-2 leading-snug">{{ a.title }}</h3>
+                <p class="text-[11px] text-slate-500 mt-1 line-clamp-2">{{ a.description }}</p>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400">Total Pengumpulan:</span>
+                    <span class="font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full">{{ a.submission_count }} Siswa</span>
+                </div>
+                {% if a.meeting_number == 3 %}
+                <button type="button" onclick="openKeyModal()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-1.5 rounded-xl text-xs transition flex items-center justify-center space-x-1.5 shadow-sm">
+                    <i data-lucide="key" class="w-3.5 h-3.5"></i>
+                    <span>Kunci Valid Flowchart LKPD 3</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Teacher Official Key Banner LKPD 3 -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-5 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-indigo-900 shadow-lg">
+        <div class="flex items-center space-x-3.5">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center shrink-0">
+                <i data-lucide="key" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-sm text-white flex items-center space-x-2">
+                    <span>Kunci Valid Resmi: Desain Algoritma & Flowchart LKPD 3</span>
+                    <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Khusus Guru</span>
+                </h3>
+                <p class="text-xs text-slate-300 mt-0.5">
+                    Gunakan pedoman resmi 12 slot geometri flowchart dan 10 tahapan algoritma diskon kasir untuk memverifikasi ketepatan jawaban siswa.
+                </p>
+            </div>
+        </div>
+        <button type="button" onclick="openKeyModal()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2.5 rounded-xl shadow transition flex items-center space-x-2 shrink-0">
+            <i data-lucide="eye" class="w-4 h-4"></i>
+            <span>Buka Kunci Jawaban Valid</span>
+        </button>
+    </div>
+
+    <!-- Student Submissions Table -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Jawaban Tugas yang Dikumpulkan Siswa</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Nama Siswa</th>
+                        <th class="py-3 px-4">Tugas / LKPD</th>
+                        <th class="py-3 px-4">Waktu Dikirim</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4 text-center">Nilai</th>
+                        <th class="py-3 px-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% if submissions %}
+                        {% for sub in submissions %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3.5 px-4">
+                                <div class="font-bold text-slate-800">{{ sub.student_name }}</div>
+                                <div class="text-[10px] text-slate-400">{{ sub.class_name }} {% if sub.group_members %}• Kelompok: {{ sub.group_members }}{% endif %}</div>
+                            </td>
+                            <td class="py-3.5 px-4 font-semibold text-slate-700">{{ sub.assignment_title }}</td>
+                            <td class="py-3.5 px-4 text-slate-400 font-mono text-[11px]">{{ sub.submitted_at[0:16] }}</td>
+                            <td class="py-3.5 px-4 text-center">
+                                {% if sub.status == 'graded' %}
+                                    <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Dinilai</span>
+                                {% else %}
+                                    <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Menunggu Koreksi</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4 text-center font-bold text-sm">
+                                {% if sub.score is not none %}
+                                    <span class="text-indigo-600">{{ sub.score }}</span>
+                                {% else %}
+                                    <span class="text-slate-300">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3.5 px-4 text-right">
+                                <button onclick="openGradingModal({{ sub.id }}, '{{ sub.student_name }}', '{{ sub.assignment_title }}', '{{ sub.submission_text|escape }}', '{{ sub.score if sub.score is not none else '' }}', '{{ sub.feedback if sub.feedback else '' }}')" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-xl transition">
+                                    Beri Nilai
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-10 text-slate-400 text-xs italic">
+                                Belum ada siswa yang mengumpulkan tugas atau LKPD.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Beri Nilai -->
+<div id="modalNilai" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <h3 class="font-bold text-slate-800 text-lg mb-1" id="gradingTitle">Penilaian Tugas</h3>
+        <p class="text-xs text-slate-500 mb-4" id="gradingSubtext">Siswa: -</p>
+        
+        <!-- Answer Preview with Teacher Key Toggle -->
+        <div class="mb-4 space-y-2">
+            <!-- Accordion Kunci Jawaban Resmi LKPD 3 -->
+            <div id="gradingKeyAccordionWrapper">
+                <button type="button" onclick="toggleGradingAnswerKey()" class="w-full text-left bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center justify-between">
+                    <span class="flex items-center space-x-2">
+                        <i data-lucide="key" class="w-3.5 h-3.5 text-amber-600"></i>
+                        <span>Acuan Koreksi: Kunci Valid Flowchart LKPD 3</span>
+                    </span>
+                    <i data-lucide="chevron-down" id="iconToggleKey" class="w-4 h-4 text-amber-600 transition-transform"></i>
+                </button>
+                <div id="boxGradingKey" class="hidden mt-2 p-3.5 bg-slate-900 text-slate-200 rounded-2xl border border-slate-800 text-[11px] font-mono max-h-52 overflow-y-auto space-y-2.5">
+                    <div class="flex items-center justify-between font-bold text-amber-400 uppercase tracking-wider text-[10px] pb-1.5 border-b border-slate-800">
+                        <span>Susunan Valid 12 Slot Flowchart Kasir:</span>
+                        <span class="text-emerald-400 font-normal">100 Poin</span>
+                    </div>
+                    <div class="space-y-1 leading-relaxed text-xs">
+                        <div class="text-emerald-400">• <strong>Slot 1 (Oval):</strong> MULAI</div>
+                        <div class="text-sky-300">• <strong>Slot 2 (Jajargenjang):</strong> INPUT: total_belanja, is_member</div>
+                        <div class="text-amber-300">• <strong>Slot 3 (Belah Ketupat):</strong> total_belanja &gt; 1.000.000 ?</div>
+                        <div class="pl-3 text-amber-200 text-[11px]">↳ <em>Cabang YA (&gt; 1 Juta):</em></div>
+                        <div class="pl-5 text-amber-300">• <strong>Slot 4 (Belah Ketupat):</strong> is_member == "YA" ?</div>
+                        <div class="pl-8 text-indigo-300">• <strong>Slot 5 (Persegi Panjang):</strong> diskon = 15% (VIP Member)</div>
+                        <div class="pl-8 text-indigo-300">• <strong>Slot 6 (Persegi Panjang):</strong> diskon = 10% (Reguler)</div>
+                        <div class="pl-3 text-sky-200 text-[11px]">↳ <em>Cabang TIDAK (&le; 1 Juta):</em></div>
+                        <div class="pl-5 text-amber-300">• <strong>Slot 7 (Belah Ketupat):</strong> total_belanja &gt; 500.000 ?</div>
+                        <div class="pl-8 text-indigo-300">• <strong>Slot 8 (Persegi Panjang):</strong> diskon = 5%</div>
+                        <div class="pl-8 text-indigo-300">• <strong>Slot 9 (Persegi Panjang):</strong> diskon = 0%</div>
+                        <div class="text-indigo-300">• <strong>Slot 10 (Persegi Panjang):</strong> potongan = total_belanja * (diskon/100); total_bayar = total_belanja - potongan</div>
+                        <div class="text-sky-300">• <strong>Slot 11 (Jajargenjang):</strong> OUTPUT STRUK: total_bayar, diskon, potongan</div>
+                        <div class="text-emerald-400">• <strong>Slot 12 (Oval):</strong> SELESAI</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-500 uppercase mb-1">Jawaban / Laporan Siswa:</label>
+                <div id="gradingAnswerPreview" class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100 text-xs text-slate-700 whitespace-pre-wrap max-h-48 overflow-y-auto"></div>
+            </div>
+        </div>
+
+        <form id="formBeriNilai" method="POST" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Skor Nilai (Skala 0–100)</label>
+                <input type="number" name="score" id="inputScore" required min="0" max="100" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-base font-bold">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Umpan Balik Guru (Feedback Konstruktif)</label>
+                <textarea name="feedback" id="inputFeedback" rows="3" placeholder="Berikan catatan perbaikan pohon dekomposisi atau logika flowchart..." class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            </div>
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modalNilai').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Tutup</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold">Simpan Nilai</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function openKeyModal() {
+        document.getElementById('modalKunciLKPD3').classList.remove('hidden');
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function closeKeyModal() {
+        document.getElementById('modalKunciLKPD3').classList.add('hidden');
+    }
+
+    function switchKeyTab(tabName) {
+        ['part1', 'part2', 'dryrun'].forEach(t => {
+            const panel = document.getElementById('keyPanel' + t.charAt(0).toUpperCase() + t.slice(1));
+            const btn = document.getElementById('btnKeyTab' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (panel) panel.classList.add('hidden');
+            if (btn) {
+                btn.className = 'px-4 py-2 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition';
+            }
+        });
+
+        const activePanel = document.getElementById('keyPanel' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+        const activeBtn = document.getElementById('btnKeyTab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+        if (activePanel) activePanel.classList.remove('hidden');
+        if (activeBtn) {
+            activeBtn.className = 'px-4 py-2 rounded-xl font-bold bg-amber-500 text-slate-950 shadow transition';
+        }
+    }
+
+    function toggleGradingAnswerKey() {
+        const box = document.getElementById('boxGradingKey');
+        const icon = document.getElementById('iconToggleKey');
+        if (box) {
+            box.classList.toggle('hidden');
+            if (icon) {
+                icon.classList.toggle('rotate-180');
+            }
+        }
+    }
+
+    function openGradingModal(id, student, title, text, score, feedback) {
+        document.getElementById('gradingTitle').innerText = title;
+        document.getElementById('gradingSubtext').innerText = 'Siswa: ' + student;
+        document.getElementById('gradingAnswerPreview').innerText = text || '(Tidak ada teks jawaban langsung, mungkin dalam bentuk tautan file)';
+        document.getElementById('inputScore').value = score || '';
+        document.getElementById('inputFeedback').value = feedback || '';
+        document.getElementById('formBeriNilai').action = '/guru/tugas/nilai/' + id;
+        document.getElementById('modalNilai').classList.remove('hidden');
+    }
+</script>
+
+<!-- ========================================================================= -->
+<!-- MODAL KUNCI JAWABAN VALID LKPD 3 (KHUSUS GURU)                            -->
+<!-- ========================================================================= -->
+<div id="modalKunciLKPD3" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 text-white rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl border border-slate-800 max-h-[90vh] overflow-y-auto space-y-5">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between border-b border-slate-800 pb-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center">
+                    <i data-lucide="key" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">Kunci Resmi Guru</span>
+                        <span class="text-xs text-slate-400 font-mono">Pertemuan 3 • LKPD 3</span>
+                    </div>
+                    <h3 class="text-lg font-black text-white mt-1">Kunci Valid: Desain Algoritma & Flowchart Diskon Belanja Kasir</h3>
+                </div>
+            </div>
+            <button type="button" onclick="closeKeyModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white flex items-center justify-center font-bold transition">
+                ✕
+            </button>
+        </div>
+
+        <!-- Tab Nav Inside Modal -->
+        <div class="flex space-x-2 border-b border-slate-800 pb-2 text-xs">
+            <button type="button" id="btnKeyTabPart2" onclick="switchKeyTab('part2')" class="px-4 py-2 rounded-xl font-bold bg-amber-500 text-slate-950 shadow transition">
+                ⚡ Kunci Bagian 2 (Flowchart 12 Slot)
+            </button>
+            <button type="button" id="btnKeyTabPart1" onclick="switchKeyTab('part1')" class="px-4 py-2 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                📝 Kunci Bagian 1 (10 Urutan Algoritma)
+            </button>
+            <button type="button" id="btnKeyTabDryrun" onclick="switchKeyTab('dryrun')" class="px-4 py-2 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                📊 Hasil Uji Telusur 4 Kasus
+            </button>
+        </div>
+
+        <!-- Panel 1: Kunci Bagian 2 (Flowchart 12 Slot) -->
+        <div id="keyPanelPart2" class="space-y-4">
+            <div class="text-xs text-slate-300 leading-relaxed bg-slate-950/70 p-3 rounded-2xl border border-slate-800">
+                Berikut adalah susunan valid <strong>12 Simbol Geometri</strong> diagram alir diskon kasir minimarket sekolah. Siswa mendapatkan skor 100 jika menempatkan simbol berikut pada slot yang tepat:
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-mono">
+                <div class="p-3 rounded-2xl bg-slate-950 border border-emerald-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wide">● Slot 1 (Oval / Terminator)</span>
+                    <div class="font-bold text-white">MULAI</div>
+                    <div class="text-[10px] text-slate-400 italic">Titik Awal Eksekusi</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-sky-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wide">▱ Slot 2 (Jajargenjang / Input)</span>
+                    <div class="font-bold text-white">INPUT: total_belanja, is_member</div>
+                    <div class="text-[10px] text-slate-400 italic">Masukan Data Pelanggan</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-amber-900/60 space-y-1 sm:col-span-2">
+                    <span class="text-[10px] font-bold text-amber-400 uppercase tracking-wide">◇ Slot 3 (Belah Ketupat / Decision)</span>
+                    <div class="font-bold text-white">total_belanja &gt; 1.000.000 ?</div>
+                    <div class="text-[10px] text-slate-400 italic">Evaluasi Ambang Belanja Tinggi</div>
+                </div>
+
+                <!-- Cabang YA Member -->
+                <div class="p-3 rounded-2xl bg-slate-950 border border-emerald-800/40 space-y-1">
+                    <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wide">◇ Slot 4 (Belah Ketupat / Decision)</span>
+                    <div class="font-bold text-white">is_member == "YA" ?</div>
+                    <div class="text-[10px] text-emerald-400 italic">Cabang YA dari Slot 3</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-indigo-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">▭ Slot 5 (Persegi Panjang / Proses)</span>
+                    <div class="font-bold text-white">diskon = 15% (10% + Member 5%)</div>
+                    <div class="text-[10px] text-emerald-400 italic">Cabang YA dari Slot 4 (VIP Member)</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-indigo-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">▭ Slot 6 (Persegi Panjang / Proses)</span>
+                    <div class="font-bold text-white">diskon = 10%</div>
+                    <div class="text-[10px] text-slate-400 italic">Cabang TIDAK dari Slot 4 (Non-Member)</div>
+                </div>
+
+                <!-- Cabang TIDAK 500k -->
+                <div class="p-3 rounded-2xl bg-slate-950 border border-amber-800/40 space-y-1">
+                    <span class="text-[10px] font-bold text-amber-300 uppercase tracking-wide">◇ Slot 7 (Belah Ketupat / Decision)</span>
+                    <div class="font-bold text-white">total_belanja &gt; 500.000 ?</div>
+                    <div class="text-[10px] text-rose-400 italic">Cabang TIDAK dari Slot 3 (&le; 1 Juta)</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-indigo-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">▭ Slot 8 (Persegi Panjang / Proses)</span>
+                    <div class="font-bold text-white">diskon = 5%</div>
+                    <div class="text-[10px] text-sky-400 italic">Cabang YA dari Slot 7</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-indigo-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">▭ Slot 9 (Persegi Panjang / Proses)</span>
+                    <div class="font-bold text-white">diskon = 0%</div>
+                    <div class="text-[10px] text-slate-400 italic">Cabang TIDAK dari Slot 7 (&le; 500 Ribu)</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-indigo-800/80 space-y-1 sm:col-span-2">
+                    <span class="text-[10px] font-bold text-indigo-400 uppercase tracking-wide">▭ Slot 10 (Persegi Panjang / Proses Hitung)</span>
+                    <div class="font-bold text-white">potongan = total_belanja * (diskon/100)<br>total_bayar = total_belanja - potongan</div>
+                    <div class="text-[10px] text-indigo-300 italic">Penyatuan Seluruh Cabang Menuju Kasir</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-sky-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-sky-400 uppercase tracking-wide">▱ Slot 11 (Jajargenjang / Output)</span>
+                    <div class="font-bold text-white">OUTPUT STRUK KASIR: total_bayar, diskon, potongan</div>
+                    <div class="text-[10px] text-slate-400 italic">Cetak Struk Transaksi</div>
+                </div>
+
+                <div class="p-3 rounded-2xl bg-slate-950 border border-emerald-900/60 space-y-1">
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wide">● Slot 12 (Oval / Terminator)</span>
+                    <div class="font-bold text-white">SELESAI</div>
+                    <div class="text-[10px] text-slate-400 italic">Titik Akhir Eksekusi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 2: Kunci Bagian 1 (10 Urutan Algoritma) -->
+        <div id="keyPanelPart1" class="hidden space-y-3 text-xs">
+            <div class="text-xs text-slate-300 leading-relaxed bg-slate-950/70 p-3 rounded-2xl border border-slate-800">
+                Urutan 10 langkah algoritma penalaran komputasional yang benar (Langkah 1 s/d 10):
+            </div>
+
+            <div class="space-y-2">
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-xs shrink-0">1</span>
+                    <div><span class="text-[10px] text-emerald-400 font-bold">[Terminator]</span> MULAI (Start Program Kasir Supermarket)</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 font-bold flex items-center justify-center text-xs shrink-0">2</span>
+                    <div><span class="text-[10px] text-sky-400 font-bold">[Input]</span> BACA INPUT DATA: Masukkan nilai total_belanja dan status member (is_member: YA atau TIDAK)</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-xs shrink-0">3</span>
+                    <div><span class="text-[10px] text-amber-400 font-bold">[Decision]</span> PERIKSA KONDISI 1: Apakah total_belanja &gt; 1.000.000 ?</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs shrink-0">4</span>
+                    <div><span class="text-[10px] text-indigo-400 font-bold">[Decision & Proses]</span> CABANG YA (&gt; 1 Juta): Set diskon = 10%. Periksa apakah is_member == "YA"? Jika YA maka diskon = 15% (tambah 5%), jika TIDAK diskon tetap 10%</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-xs shrink-0">5</span>
+                    <div><span class="text-[10px] text-amber-400 font-bold">[Decision]</span> CABANG TIDAK (&le; 1 Juta): Periksa kondisi berikutnya, apakah total_belanja &gt; 500.000 ?</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs shrink-0">6</span>
+                    <div><span class="text-[10px] text-indigo-400 font-bold">[Proses]</span> CABANG YA (&gt; 500 Ribu): Tetapkan diskon = 5%</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs shrink-0">7</span>
+                    <div><span class="text-[10px] text-indigo-400 font-bold">[Proses]</span> CABANG TIDAK (&le; 500 Ribu): Tetapkan diskon = 0% (tidak mendapatkan potongan diskon)</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center text-xs shrink-0">8</span>
+                    <div><span class="text-[10px] text-purple-400 font-bold">[Proses Hitung]</span> HITUNG PEMBAYARAN: potongan = total_belanja * (diskon / 100), lalu total_bayar = total_belanja - potongan</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-sky-500/20 text-sky-400 font-bold flex items-center justify-center text-xs shrink-0">9</span>
+                    <div><span class="text-[10px] text-sky-400 font-bold">[Output]</span> OUTPUT STRUK KASIR: Cetak rincian total_belanja, persentase diskon, potongan harga, dan total_bayar ke layar/kertas struk</div>
+                </div>
+                <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+                    <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-xs shrink-0">10</span>
+                    <div><span class="text-[10px] text-emerald-400 font-bold">[Terminator]</span> SELESAI (End Program Kasir Supermarket)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel 3: Hasil Uji Telusur Dry Run -->
+        <div id="keyPanelDryrun" class="hidden space-y-3 text-xs">
+            <div class="text-xs text-slate-300 leading-relaxed bg-slate-950/70 p-3 rounded-2xl border border-slate-800">
+                Hasil verifikasi eksekusi dry-run 4 skenario transaksi kasir:
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left font-mono text-xs border border-slate-800 rounded-xl overflow-hidden">
+                    <thead class="bg-slate-950 text-slate-400 border-b border-slate-800">
+                        <tr>
+                            <th class="py-2.5 px-3">Kasus Uji</th>
+                            <th class="py-2.5 px-3">Data Masukan</th>
+                            <th class="py-2.5 px-3 text-center">Diskon</th>
+                            <th class="py-2.5 px-3 text-right">Potongan</th>
+                            <th class="py-2.5 px-3 text-right">Total Bayar</th>
+                            <th class="py-2.5 px-3 text-center">Alur Eksekusi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800 bg-slate-900/60">
+                        <tr>
+                            <td class="py-2.5 px-3 font-bold text-white">Kasus 1</td>
+                            <td class="py-2.5 px-3">Rp 1.500.000, Member YA</td>
+                            <td class="py-2.5 px-3 text-center text-amber-400 font-bold">15%</td>
+                            <td class="py-2.5 px-3 text-right text-emerald-400">Rp 225.000</td>
+                            <td class="py-2.5 px-3 text-right text-white font-bold">Rp 1.275.000</td>
+                            <td class="py-2.5 px-3 text-[10px] text-slate-400">1➔2➔3(YA)➔4(YA)➔5➔10➔11➔12</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 px-3 font-bold text-white">Kasus 2</td>
+                            <td class="py-2.5 px-3">Rp 1.200.000, Non-Member</td>
+                            <td class="py-2.5 px-3 text-center text-amber-400 font-bold">10%</td>
+                            <td class="py-2.5 px-3 text-right text-emerald-400">Rp 120.000</td>
+                            <td class="py-2.5 px-3 text-right text-white font-bold">Rp 1.080.000</td>
+                            <td class="py-2.5 px-3 text-[10px] text-slate-400">1➔2➔3(YA)➔4(TDK)➔6➔10➔11➔12</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 px-3 font-bold text-white">Kasus 3</td>
+                            <td class="py-2.5 px-3">Rp 750.000, Non-Member</td>
+                            <td class="py-2.5 px-3 text-center text-sky-400 font-bold">5%</td>
+                            <td class="py-2.5 px-3 text-right text-emerald-400">Rp 37.500</td>
+                            <td class="py-2.5 px-3 text-right text-white font-bold">Rp 712.500</td>
+                            <td class="py-2.5 px-3 text-[10px] text-slate-400">1➔2➔3(TDK)➔7(YA)➔8➔10➔11➔12</td>
+                        </tr>
+                        <tr>
+                            <td class="py-2.5 px-3 font-bold text-white">Kasus 4</td>
+                            <td class="py-2.5 px-3">Rp 350.000, Member YA</td>
+                            <td class="py-2.5 px-3 text-center text-slate-400 font-bold">0%</td>
+                            <td class="py-2.5 px-3 text-right text-slate-400">Rp 0</td>
+                            <td class="py-2.5 px-3 text-right text-white font-bold">Rp 350.000</td>
+                            <td class="py-2.5 px-3 text-[10px] text-slate-400">1➔2➔3(TDK)➔7(TDK)➔9➔10➔11➔12</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-3 border-t border-slate-800 flex justify-end">
+            <button type="button" onclick="closeKeyModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition">
+                Tutup Kunci Jawaban
+            </button>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

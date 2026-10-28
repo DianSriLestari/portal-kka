@@ -1,0 +1,356 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Pengerjaan {{ quiz.title }} - Portal KKA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header & Timer Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-indigo-900 rounded-3xl p-5 sm:p-6 text-white shadow-xl sticky top-20 z-40 border border-indigo-700/40">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-[10px] font-black uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 px-2.5 py-0.5 rounded-full">
+                        {{ quiz.quiz_type|upper }} SUMATIF
+                    </span>
+                    {% if is_remedial_session %}
+                    <span class="text-[10px] font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full flex items-center space-x-1">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                        <span>Sesi Ujian Remedial (Kesempatan ke-2)</span>
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="text-base sm:text-lg font-black mt-1 text-white leading-snug">{{ quiz.title }}</h1>
+                <p class="text-[11px] text-slate-300">Format: 1 Soal per Halaman &bull; Waktu: {{ quiz.duration_minutes }} Menit &bull; KKM: {{ quiz.pass_score }}</p>
+            </div>
+            
+            <!-- Timer Countdown Display -->
+            <div id="timerContainer" class="bg-indigo-950/90 border border-indigo-500/40 px-4 py-2.5 rounded-2xl flex items-center space-x-2.5 text-amber-300 font-mono font-bold text-base shadow-inner self-stretch sm:self-auto justify-center transition-all duration-300">
+                <i data-lucide="clock" class="w-5 h-5 shrink-0" id="timerIcon"></i>
+                <div class="text-center">
+                    <span class="text-[9px] uppercase tracking-wider text-slate-400 block font-sans">Sisa Waktu</span>
+                    <span id="timerCountdown" class="text-lg tracking-wider">10:00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Progress Bar & Question Jump Pills -->
+        <div class="mt-4 pt-3 border-t border-indigo-800/60">
+            <div class="flex items-center justify-between text-xs text-indigo-200 mb-2">
+                <span class="font-bold flex items-center space-x-1.5">
+                    <span>Soal <span id="activeQuestionNumDisplay" class="text-white font-black text-sm">1</span> dari {{ questions|length }}</span>
+                </span>
+                <span class="text-[11px] font-mono bg-indigo-950/60 px-2.5 py-0.5 rounded-full border border-indigo-700/50">
+                    <span id="answeredCountBadge" class="text-emerald-400 font-bold">0</span> / {{ questions|length }} Terjawab
+                </span>
+            </div>
+
+            <!-- Question Navigation Pills Grid -->
+            <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                {% for q in questions %}
+                <button type="button" 
+                        onclick="goToQuestion({{ loop.index0 }})"
+                        id="pill_nav_{{ loop.index0 }}"
+                        class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-bold transition flex items-center justify-center border shadow-xs {% if loop.first %}bg-indigo-600 text-white border-white ring-2 ring-indigo-300 scale-105{% else %}bg-indigo-950/50 text-indigo-200 border-indigo-800/80 hover:bg-indigo-800/60{% endif %}"
+                        title="Lompat ke Soal {{ loop.index }}">
+                    {{ loop.index }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Single Question Form -->
+    <form id="quizForm" action="/siswa/kuis/{{ quiz.id }}/submit" method="POST" class="space-y-4">
+        
+        {% for q in questions %}
+        <div id="question_card_{{ loop.index0 }}" class="question-card {% if not loop.first %}hidden{% endif %} bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-6 animate-in fade-in duration-200">
+            
+            <!-- Question Number Header & Badge -->
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <div class="flex items-center space-x-3">
+                    <span class="w-9 h-9 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-sm">
+                        {{ loop.index }}
+                    </span>
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Butir Soal {{ loop.index }} dari {{ questions|length }}</span>
+                        <span class="text-[11px] text-indigo-600 font-semibold">Tipe: Pilihan Ganda (C1–C4, Opsi A–E)</span>
+                    </div>
+                </div>
+                <span id="status_answered_{{ loop.index0 }}" class="hidden text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 flex items-center space-x-1">
+                    <i data-lucide="check-circle" class="w-3 h-3"></i>
+                    <span>Telah Dijawab</span>
+                </span>
+            </div>
+
+            <!-- Question Text Body -->
+            <div class="text-slate-800 font-medium text-sm sm:text-base leading-relaxed bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-3">
+                {{ q.question_text | safe }}
+            </div>
+
+            <!-- Options A, B, C, D, E -->
+            <div class="space-y-3 pt-2">
+                
+                <!-- Option A -->
+                <label class="option-label flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer transition text-xs sm:text-sm">
+                    <input type="radio" name="q_{{ q.id }}" value="A" onchange="onAnswerSelected({{ loop.index0 }})" class="mt-0.5 w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                    <span class="font-black text-slate-500 shrink-0">A.</span>
+                    <span class="text-slate-700 font-medium leading-relaxed">{{ q.option_a }}</span>
+                </label>
+
+                <!-- Option B -->
+                <label class="option-label flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer transition text-xs sm:text-sm">
+                    <input type="radio" name="q_{{ q.id }}" value="B" onchange="onAnswerSelected({{ loop.index0 }})" class="mt-0.5 w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                    <span class="font-black text-slate-500 shrink-0">B.</span>
+                    <span class="text-slate-700 font-medium leading-relaxed">{{ q.option_b }}</span>
+                </label>
+
+                <!-- Option C -->
+                <label class="option-label flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer transition text-xs sm:text-sm">
+                    <input type="radio" name="q_{{ q.id }}" value="C" onchange="onAnswerSelected({{ loop.index0 }})" class="mt-0.5 w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                    <span class="font-black text-slate-500 shrink-0">C.</span>
+                    <span class="text-slate-700 font-medium leading-relaxed">{{ q.option_c }}</span>
+                </label>
+
+                <!-- Option D -->
+                <label class="option-label flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer transition text-xs sm:text-sm">
+                    <input type="radio" name="q_{{ q.id }}" value="D" onchange="onAnswerSelected({{ loop.index0 }})" class="mt-0.5 w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                    <span class="font-black text-slate-500 shrink-0">D.</span>
+                    <span class="text-slate-700 font-medium leading-relaxed">{{ q.option_d }}</span>
+                </label>
+
+                <!-- Option E (If available) -->
+                {% if q.option_e %}
+                <label class="option-label flex items-start space-x-3.5 p-3.5 sm:p-4 rounded-2xl border-2 border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer transition text-xs sm:text-sm">
+                    <input type="radio" name="q_{{ q.id }}" value="E" onchange="onAnswerSelected({{ loop.index0 }})" class="mt-0.5 w-4 h-4 text-indigo-600 focus:ring-indigo-500">
+                    <span class="font-black text-slate-500 shrink-0">E.</span>
+                    <span class="text-slate-700 font-medium leading-relaxed">{{ q.option_e }}</span>
+                </label>
+                {% endif %}
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+        <!-- Bottom Controls & Navigation Toolbar -->
+        <div class="bg-white rounded-3xl p-4 sm:p-5 border border-slate-100 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+            
+            <!-- Previous Button -->
+            <button type="button" 
+                    id="btnPrevQuestion"
+                    onclick="navigateStep(-1)" 
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-2xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition flex items-center justify-center space-x-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>◄ Soal Sebelumnya</span>
+            </button>
+
+            <!-- Status Indicator in toolbar -->
+            <div class="text-center text-xs text-slate-500">
+                <span class="font-bold text-slate-700">Halaman Soal <span id="toolbarCurrentNum">1</span></span> / {{ questions|length }}
+            </div>
+
+            <!-- Next & Submit Buttons -->
+            <div class="flex items-center space-x-2 w-full sm:w-auto">
+                <button type="button" 
+                        id="btnNextQuestion"
+                        onclick="navigateStep(1)" 
+                        class="flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md shadow-indigo-100 transition flex items-center justify-center space-x-1.5">
+                    <span>Soal Berikutnya ►</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+
+                <button type="button" 
+                        id="btnSubmitExam"
+                        onclick="confirmSubmission()" 
+                        class="hidden flex-1 sm:flex-initial px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-100 transition flex items-center justify-center space-x-1.5">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Kirim Ujian ✓</span>
+                </button>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const totalQuestions = {{ questions|length }};
+    let currentIndex = 0;
+    
+    // Countdown Timer: 10 minutes (600s)
+    let durationSeconds = {{ quiz.duration_minutes }} * 60;
+    const timerCountdownEl = document.getElementById('timerCountdown');
+    const timerContainerEl = document.getElementById('timerContainer');
+    const timerIconEl = document.getElementById('timerIcon');
+
+    const timerInterval = setInterval(() => {
+        durationSeconds--;
+        if (durationSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerCountdownEl.innerText = "00:00";
+            alert('Waktu 10 menit pengerjaan telah habis! Jawaban Anda otomatis terkirim sekarang.');
+            document.getElementById('quizForm').submit();
+            return;
+        }
+
+        const m = Math.floor(durationSeconds / 60);
+        const s = durationSeconds % 60;
+        timerCountdownEl.innerText = `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+
+        // Color warnings based on time left
+        if (durationSeconds <= 60) {
+            // Less than 1 minute: Red pulsing
+            timerContainerEl.className = "bg-rose-950/90 border-2 border-rose-500 px-4 py-2.5 rounded-2xl flex items-center space-x-2.5 text-rose-300 font-mono font-black text-base shadow-lg animate-pulse self-stretch sm:self-auto justify-center";
+            timerIconEl.classList.add("text-rose-400");
+        } else if (durationSeconds <= 180) {
+            // Less than 3 minutes: Amber warning
+            timerContainerEl.className = "bg-amber-950/90 border border-amber-500 px-4 py-2.5 rounded-2xl flex items-center space-x-2.5 text-amber-300 font-mono font-bold text-base shadow-inner self-stretch sm:self-auto justify-center";
+        }
+    }, 1000);
+
+    // Question Navigation Logic
+    function goToQuestion(index) {
+        if (index < 0 || index >= totalQuestions) return;
+
+        // Hide current question card
+        const currentCard = document.getElementById(`question_card_${currentIndex}`);
+        if (currentCard) currentCard.classList.add('hidden');
+
+        // Update Nav Pill styling for old index
+        updatePillStyle(currentIndex, false);
+
+        // Update current index
+        currentIndex = index;
+
+        // Show target question card
+        const targetCard = document.getElementById(`question_card_${currentIndex}`);
+        if (targetCard) targetCard.classList.remove('hidden');
+
+        // Update Nav Pill styling for new index
+        updatePillStyle(currentIndex, true);
+
+        // Update displays
+        document.getElementById('activeQuestionNumDisplay').innerText = currentIndex + 1;
+        document.getElementById('toolbarCurrentNum').innerText = currentIndex + 1;
+
+        // Update Previous Button State
+        const btnPrev = document.getElementById('btnPrevQuestion');
+        if (currentIndex === 0) {
+            btnPrev.disabled = true;
+        } else {
+            btnPrev.disabled = false;
+        }
+
+        // Update Next / Submit Buttons (Tombol kirim ujian hanya muncul pada soal terakhir)
+        const btnNext = document.getElementById('btnNextQuestion');
+        const btnSubmit = document.getElementById('btnSubmitExam');
+        if (currentIndex === totalQuestions - 1) {
+            btnNext.classList.add('hidden');
+            btnSubmit.classList.remove('hidden');
+        } else {
+            btnNext.classList.remove('hidden');
+            btnSubmit.classList.add('hidden');
+        }
+
+        // Smooth scroll to question top
+        window.scrollTo({ top: 80, behavior: 'smooth' });
+    }
+
+    function navigateStep(direction) {
+        goToQuestion(currentIndex + direction);
+    }
+
+    // Call on radio change
+    function onAnswerSelected(qIndex) {
+        // Mark badge in card
+        const badge = document.getElementById(`status_answered_${qIndex}`);
+        if (badge) badge.classList.remove('hidden');
+
+        // Update option radio label border visual
+        const card = document.getElementById(`question_card_${qIndex}`);
+        if (card) {
+            card.querySelectorAll('.option-label').forEach(label => {
+                const radio = label.querySelector('input[type="radio"]');
+                if (radio && radio.checked) {
+                    label.classList.add('border-indigo-600', 'bg-indigo-50/40', 'shadow-xs');
+                    label.classList.remove('border-slate-200');
+                } else {
+                    label.classList.remove('border-indigo-600', 'bg-indigo-50/40', 'shadow-xs');
+                    label.classList.add('border-slate-200');
+                }
+            });
+        }
+
+        // Recalculate answered count
+        updateAnsweredCount();
+
+        // Update Pill style
+        updatePillStyle(qIndex, qIndex === currentIndex);
+    }
+
+    function isQuestionAnswered(qIndex) {
+        const card = document.getElementById(`question_card_${qIndex}`);
+        if (!card) return false;
+        const radios = card.querySelectorAll('input[type="radio"]');
+        for (let r of radios) {
+            if (r.checked) return true;
+        }
+        return false;
+    }
+
+    function updatePillStyle(qIndex, isActive) {
+        const pill = document.getElementById('pill_nav_' + qIndex);
+        if (!pill) return;
+
+        const answered = isQuestionAnswered(qIndex);
+
+        if (isActive) {
+            pill.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-black transition flex items-center justify-center border-2 border-white bg-indigo-600 text-white ring-4 ring-indigo-400/50 scale-110 shadow-md";
+        } else if (answered) {
+            pill.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-bold transition flex items-center justify-center border border-emerald-400 bg-emerald-600 text-white shadow-xs";
+        } else {
+            pill.className = "w-8 h-8 sm:w-9 sm:h-9 rounded-xl text-xs font-bold transition flex items-center justify-center border border-indigo-800/80 bg-indigo-950/50 text-indigo-200 hover:bg-indigo-800/60";
+        }
+    }
+
+    function countTotalAnswered() {
+        let count = 0;
+        for (let i = 0; i < totalQuestions; i++) {
+            if (isQuestionAnswered(i)) count++;
+        }
+        return count;
+    }
+
+    function updateAnsweredCount() {
+        const answered = countTotalAnswered();
+        const badge = document.getElementById('answeredCountBadge');
+        if (badge) badge.innerText = answered;
+    }
+
+    function confirmSubmission() {
+        const answered = countTotalAnswered();
+        let confirmMsg = `Anda telah menjawab ${answered} dari ${totalQuestions} soal.\n\n`;
+        
+        if (answered < totalQuestions) {
+            confirmMsg += `PERHATIAN: Masih ada ${totalQuestions - answered} soal yang belum dijawab!\n\n`;
+        }
+
+        confirmMsg += "Apakah Anda yakin ingin menyelesaikan ujian dan mengirimkan jawaban sekarang?";
+
+        if (confirm(confirmMsg)) {
+            clearInterval(timerInterval);
+            document.getElementById('quizForm').submit();
+        }
+    }
+
+    // Initialize state
+    document.addEventListener('DOMContentLoaded', () => {
+        goToQuestion(0);
+        updateAnsweredCount();
+    });
+</script>
+{% endblock %}

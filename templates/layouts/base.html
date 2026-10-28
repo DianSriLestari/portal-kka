@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portal Pembelajaran KKA - SMAN 7 Pontianak{% endblock %}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <header class="bg-brand-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Brand / Logo -->
+                <div class="flex items-center space-x-3">
+                    <a href="/" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 bg-indigo-500 rounded-xl flex items-center justify-center font-bold text-white shadow-inner">
+                            <i data-lucide="cpu" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <span class="text-lg font-bold tracking-tight block leading-tight">Portal KKA Fase E</span>
+                            <span class="text-xs text-indigo-200 block">SMAN 7 Pontianak</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Navigation Links -->
+                {% if user %}
+                <nav class="hidden md:flex items-center space-x-1">
+                    {% if user.role == 'guru' %}
+                        <a href="/guru" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'dashboard' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4 inline mr-1"></i> Dasbor
+                        </a>
+                        <a href="/guru/siswa" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'siswa' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="users" class="w-4 h-4 inline mr-1"></i> Data Siswa
+                        </a>
+                        <a href="/guru/materi" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'materi' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="book-open" class="w-4 h-4 inline mr-1"></i> Modul & Materi
+                        </a>
+                        <a href="/guru/kuis" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'kuis' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="help-circle" class="w-4 h-4 inline mr-1"></i> Soal & Kuis
+                        </a>
+                        <a href="/guru/tugas" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'tugas' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="file-check-2" class="w-4 h-4 inline mr-1"></i> Tugas LKPD
+                        </a>
+                        <a href="/guru/laporan" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'laporan' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4 inline mr-1"></i> Laporan Aktivitas
+                        </a>
+                    {% else %}
+                        <a href="/siswa" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'dashboard' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="home" class="w-4 h-4 inline mr-1"></i> Beranda Belajar
+                        </a>
+                        <a href="/siswa/simulasi" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'simulasi' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="gamepad-2" class="w-4 h-4 inline mr-1"></i> Lab Simulasi
+                        </a>
+                        <a href="/siswa/tugas" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'tugas' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="file-text" class="w-4 h-4 inline mr-1"></i> Pengumpulan LKPD
+                        </a>
+                        <a href="/siswa/refleksi" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition {% if active_nav == 'refleksi' %}bg-brand-800 text-white{% else %}text-indigo-100{% endif %}">
+                            <i data-lucide="sparkles" class="w-4 h-4 inline mr-1"></i> Jurnal Refleksi
+                        </a>
+                        <a href="/siswa/ganti-password" class="px-3 py-2 rounded-lg text-sm font-medium hover:bg-brand-800 transition text-indigo-100" title="Ganti Kata Sandi">
+                            <i data-lucide="key" class="w-4 h-4 inline mr-1"></i> Sandi
+                        </a>
+                    {% endif %}
+                </nav>
+
+                <!-- User Profile & Logout -->
+                <div class="flex items-center space-x-3">
+                    <div class="text-right hidden sm:block">
+                        <span class="text-sm font-semibold block leading-tight">{{ user.full_name }}</span>
+                        <span class="text-xs text-indigo-300 font-mono">
+                            {% if user.role == 'guru' %}
+                                <span class="bg-indigo-700 text-white px-2 py-0.5 rounded text-[10px] font-semibold uppercase">Pendidik</span>
+                            {% else %}
+                                <span class="bg-teal-700 text-white px-2 py-0.5 rounded text-[10px] font-semibold uppercase">Kelas {{ user.class_name }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <a href="/logout" title="Keluar / Logout" class="bg-rose-600/80 hover:bg-rose-700 text-white p-2 rounded-xl text-sm font-medium transition flex items-center space-x-1 shadow-sm">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                        <span class="hidden sm:inline text-xs font-semibold">Keluar</span>
+                    </a>
+                </div>
+                {% else %}
+                <div>
+                    <a href="/login" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow">
+                        Masuk / Login
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-500 space-y-2 sm:space-y-0">
+            <div>
+                &copy; 2026 <strong>SMAN 7 Pontianak</strong> — Modul Pembelajaran Mendalam Koding & Kecerdasan Artifisial (Fase E).
+            </div>
+            <div class="flex items-center space-x-4">
+                <span>Pengampu: <strong>Suharno, S.Kom.</strong></span>
+                <span>•</span>
+                <span class="text-indigo-600 font-medium">Berkesadaran • Bermakna • Menggembirakan</span>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

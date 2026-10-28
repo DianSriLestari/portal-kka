@@ -1,0 +1,288 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Jurnal Refleksi Pembelajaran Unit 1 - Portal KKA Fase E{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header Banner -->
+    <div class="bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-indigo-700/40">
+        <div class="inline-flex items-center space-x-2 bg-purple-500/20 border border-purple-400/30 px-3 py-1 rounded-full text-xs font-semibold text-purple-200 mb-2">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-300"></i>
+            <span>Prinsip Pembelajaran: Berkesadaran, Bermakna, Menggembirakan</span>
+        </div>
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">Jurnal Refleksi & Survey Pembelajaran Siswa</h1>
+        <p class="text-xs sm:text-sm text-purple-200 mt-1 max-w-2xl leading-relaxed">
+            Refleksikan pemahaman konsep dan pengalaman belajarmu selama Unit 1 (4 Pilar Berpikir Komputasional & Flowchart). Isilah survey skala pemahaman dan tuliskan kesan serta pesanmu secara jujur.
+        </p>
+    </div>
+
+    <!-- Alert Messages -->
+    {% if msg %}
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-xs">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+        <span class="font-bold">{{ msg }}</span>
+    </div>
+    {% endif %}
+
+    {% if err %}
+    <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2 shadow-xs">
+        <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+        <span class="font-bold">{{ err }}</span>
+    </div>
+    {% endif %}
+
+    <!-- Survey Form -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-8">
+        
+        <form action="/siswa/refleksi/submit" method="POST" class="space-y-8 text-xs">
+            
+            <!-- SECTION 1: SKALA PENILAIAN LIKERT (1 - 5) -->
+            <div class="space-y-6">
+                <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-black tracking-wider uppercase text-indigo-600 block">Bagian 1: Survey Skala Pemahaman</span>
+                        <h2 class="text-base sm:text-lg font-black text-slate-800">Tingkat Pemahaman Konsep & Keterampilan (Skala 1–5)</h2>
+                    </div>
+                    <div class="hidden sm:flex items-center space-x-2 text-[11px] text-slate-400 font-medium">
+                        <span>1 = Sangat Kurang</span>
+                        <span>&bull;</span>
+                        <span>5 = Sangat Menguasai</span>
+                    </div>
+                </div>
+
+                <!-- Item 1: Dekomposisi -->
+                <div class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
+                        <div>
+                            <span class="font-bold text-slate-800 text-sm">1. Dekomposisi Masalah</span>
+                            <p class="text-slate-500 text-[11px] mt-0.5">Kemampuan memecah masalah besar (seperti transaksi diskon kasir & alur antrean) menjadi sub-langkah kecil yang sistematis.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between gap-1 sm:gap-3 pt-1">
+                        {% for val in [1, 2, 3, 4, 5] %}
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="rating_decomposition" value="{{ val }}" {% if val == 5 %}checked{% endif %} class="peer sr-only">
+                            <div class="py-2.5 sm:py-3 px-2 rounded-xl border border-slate-200 bg-white peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md transition">
+                                <span class="font-black text-sm block">{{ val }}</span>
+                                <span class="text-[9px] block text-slate-400 peer-checked:text-indigo-100 leading-tight mt-0.5">
+                                    {% if val == 1 %}Sangat Kurang{% elif val == 2 %}Kurang{% elif val == 3 %}Cukup{% elif val == 4 %}Paham{% else %}Sangat Paham{% endif %}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Item 2: Pengenalan Pola & Abstraksi -->
+                <div class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-3">
+                    <div>
+                        <span class="font-bold text-slate-800 text-sm">2. Pengenalan Pola & Abstraksi</span>
+                        <p class="text-slate-500 text-[11px] mt-0.5">Kemampuan mengenali kesamaan pola aturan diskon serta memilah variabel penting (total belanja, kartu member) vs informasi yang tidak relevan.</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-1 sm:gap-3 pt-1">
+                        {% for val in [1, 2, 3, 4, 5] %}
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="rating_pattern" value="{{ val }}" {% if val == 5 %}checked{% endif %} class="peer sr-only">
+                            <div class="py-2.5 sm:py-3 px-2 rounded-xl border border-slate-200 bg-white peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md transition">
+                                <span class="font-black text-sm block">{{ val }}</span>
+                                <span class="text-[9px] block text-slate-400 peer-checked:text-indigo-100 leading-tight mt-0.5">
+                                    {% if val == 1 %}Sangat Kurang{% elif val == 2 %}Kurang{% elif val == 3 %}Cukup{% elif val == 4 %}Paham{% else %}Sangat Paham{% endif %}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Item 3: Perancangan Algoritma & Flowchart -->
+                <div class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-3">
+                    <div>
+                        <span class="font-bold text-slate-800 text-sm">3. Desain Algoritma & Notasi Flowchart Standar</span>
+                        <p class="text-slate-500 text-[11px] mt-0.5">Kemampuan memilih simbol standar ISO yang tepat (Terminator, Jajaran Genjang Input/Output, Belah Ketupat Decision, Persegi Panjang Process) dan menyusun alur panah percabangan.</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-1 sm:gap-3 pt-1">
+                        {% for val in [1, 2, 3, 4, 5] %}
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="rating_algorithm" value="{{ val }}" {% if val == 5 %}checked{% endif %} class="peer sr-only">
+                            <div class="py-2.5 sm:py-3 px-2 rounded-xl border border-slate-200 bg-white peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md transition">
+                                <span class="font-black text-sm block">{{ val }}</span>
+                                <span class="text-[9px] block text-slate-400 peer-checked:text-indigo-100 leading-tight mt-0.5">
+                                    {% if val == 1 %}Sangat Kurang{% elif val == 2 %}Kurang{% elif val == 3 %}Cukup{% elif val == 4 %}Paham{% else %}Sangat Paham{% endif %}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Item 4: Uji Telusur (Dry Run) -->
+                <div class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-3">
+                    <div>
+                        <span class="font-bold text-slate-800 text-sm">4. Uji Telusur / Penelusuran Logika (Dry Run)</span>
+                        <p class="text-slate-500 text-[11px] mt-0.5">Kemampuan melacak nilai variabel dan mengevaluasi alur percabangan dengan kasus uji batas (*boundary test cases*) sebelum program dijalankan.</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-1 sm:gap-3 pt-1">
+                        {% for val in [1, 2, 3, 4, 5] %}
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="rating_dryrun" value="{{ val }}" {% if val == 5 %}checked{% endif %} class="peer sr-only">
+                            <div class="py-2.5 sm:py-3 px-2 rounded-xl border border-slate-200 bg-white peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md transition">
+                                <span class="font-black text-sm block">{{ val }}</span>
+                                <span class="text-[9px] block text-slate-400 peer-checked:text-indigo-100 leading-tight mt-0.5">
+                                    {% if val == 1 %}Sangat Kurang{% elif val == 2 %}Kurang{% elif val == 3 %}Cukup{% elif val == 4 %}Paham{% else %}Sangat Paham{% endif %}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Item 5: Efektivitas & Kenyamanan Belajar -->
+                <div class="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-100 space-y-3">
+                    <div>
+                        <span class="font-bold text-slate-800 text-sm">5. Kenyamanan Belajar dengan Media Simulasi & Portal</span>
+                        <p class="text-slate-500 text-[11px] mt-0.5">Seberapa besar bantuan portal interaktif, simulator diagram alir, dan LKPD praktis dalam menciptakan pembelajaran yang bermakna dan menggembirakan.</p>
+                    </div>
+                    <div class="flex items-center justify-between gap-1 sm:gap-3 pt-1">
+                        {% for val in [1, 2, 3, 4, 5] %}
+                        <label class="flex-1 text-center cursor-pointer">
+                            <input type="radio" name="rating_experience" value="{{ val }}" {% if val == 5 %}checked{% endif %} class="peer sr-only">
+                            <div class="py-2.5 sm:py-3 px-2 rounded-xl border border-slate-200 bg-white peer-checked:bg-indigo-600 peer-checked:text-white peer-checked:border-indigo-600 peer-checked:shadow-md transition">
+                                <span class="font-black text-sm block">{{ val }}</span>
+                                <span class="text-[9px] block text-slate-400 peer-checked:text-indigo-100 leading-tight mt-0.5">
+                                    {% if val == 1 %}Sangat Kurang{% elif val == 2 %}Kurang{% elif val == 3 %}Cukup{% elif val == 4 %}Membantu{% else %}Sangat Membantu{% endif %}
+                                </span>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 2: INPUT KESAN DAN PESAN SISWA -->
+            <div class="space-y-6 pt-4 border-t border-slate-100">
+                <div class="border-b border-slate-100 pb-3">
+                    <span class="text-[10px] font-black tracking-wider uppercase text-purple-600 block">Bagian 2: Suara Siswa</span>
+                    <h2 class="text-base sm:text-lg font-black text-slate-800">Kesan dan Pesan Pembelajaran</h2>
+                </div>
+
+                <!-- Kesan Siswa -->
+                <div class="space-y-2">
+                    <label class="block font-bold text-slate-800 text-sm flex items-center space-x-2">
+                        <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
+                        <span>Kesan Selama Mengikuti Pembelajaran Unit 1</span>
+                    </label>
+                    <p class="text-slate-400 text-[11px]">
+                        Ceritakan apa hal yang paling berkesan, paling menarik, atau konsep baru apa yang paling kamu pahami (misal: saat memecahkan logika diskon belanja kasir atau menyusun flowchart).
+                    </p>
+                    <textarea name="impression" required rows="3" placeholder="Contoh: Pembelajaran Unit 1 sangat seru karena ada simulasi visualnya. Saya paling suka saat memecahkan logika diskon kasir dengan diagram alir..." class="w-full p-3.5 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"></textarea>
+                </div>
+
+                <!-- Pesan Siswa -->
+                <div class="space-y-2">
+                    <label class="block font-bold text-slate-800 text-sm flex items-center space-x-2">
+                        <i data-lucide="message-square" class="w-4 h-4 text-indigo-500"></i>
+                        <span>Pesan, Kendala, & Masukan untuk Pembelajaran Berikutnya</span>
+                    </label>
+                    <p class="text-slate-400 text-[11px]">
+                        Tuliskan tantangan atau kesulitan yang kamu alami, saran bagi Guru pengampu, atau hal apa yang kamu harapkan pada unit materi selanjutnya.
+                    </p>
+                    <textarea name="message" required rows="3" placeholder="Contoh: Awalnya saya sempat bingung membedakan simbol masukan dan proses, namun setelah mencoba simulasi menjadi lebih paham. Semoga materi berikutnya ada latihan kode langsung..." class="w-full p-3.5 rounded-2xl border border-slate-200 outline-none focus:ring-2 focus:ring-purple-500 text-xs sm:text-sm"></textarea>
+                </div>
+
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4 flex flex-col sm:flex-row justify-between items-center gap-3 border-t border-slate-100">
+                <span class="text-[11px] text-slate-400">Jawaban survey akan tersimpan secara otomatis dan menjadi umpan balik perbaikan pembelajaran bagi guru.</span>
+                <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3.5 px-8 rounded-2xl shadow-lg shadow-purple-200 transition text-xs flex items-center justify-center space-x-2">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                    <span>Kirim Survey & Simpan Refleksi &rarr;</span>
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- Riwayat Refleksi Tersimpan -->
+    {% if reflections %}
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-black text-slate-800 text-sm sm:text-base flex items-center space-x-2">
+                <i data-lucide="archive" class="w-4 h-4 text-indigo-600"></i>
+                <span>Riwayat Refleksi yang Pernah Anda Kirim</span>
+            </h3>
+            <span class="text-xs text-slate-400 font-mono">{{ reflections|length }} Catatan</span>
+        </div>
+
+        <div class="space-y-4">
+            {% for r in reflections %}
+            <div class="p-5 rounded-2xl bg-slate-50 border border-slate-100 text-xs space-y-4">
+                
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between text-slate-400 text-[11px] border-b border-slate-200/60 pb-2 gap-1">
+                    <span class="font-bold text-indigo-700 flex items-center space-x-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                        <span>Refleksi Pertemuan {{ r.meeting_number }} (Unit {{ r.unit_id }})</span>
+                    </span>
+                    <span class="font-mono text-slate-500">{{ r.submitted_at }}</span>
+                </div>
+
+                <!-- Rating Badges if available -->
+                {% if r.rating_decomposition %}
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[10px]">
+                    <div class="bg-white p-2 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block font-medium">Dekomposisi</span>
+                        <span class="font-black text-indigo-600 text-xs">{{ r.rating_decomposition }} / 5 ⭐</span>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block font-medium">Pola & Abstraksi</span>
+                        <span class="font-black text-indigo-600 text-xs">{{ r.rating_pattern }} / 5 ⭐</span>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block font-medium">Algoritma & Simbol</span>
+                        <span class="font-black text-indigo-600 text-xs">{{ r.rating_algorithm }} / 5 ⭐</span>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block font-medium">Dry Run</span>
+                        <span class="font-black text-indigo-600 text-xs">{{ r.rating_dryrun }} / 5 ⭐</span>
+                    </div>
+                    <div class="bg-white p-2 rounded-xl border border-slate-100">
+                        <span class="text-slate-400 block font-medium">Media Belajar</span>
+                        <span class="font-black text-indigo-600 text-xs">{{ r.rating_experience }} / 5 ⭐</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Impression & Message -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-100 space-y-1">
+                        <span class="font-bold text-purple-700 text-[11px] block flex items-center space-x-1">
+                            <i data-lucide="heart" class="w-3 h-3 text-purple-500"></i>
+                            <span>Kesan Siswa:</span>
+                        </span>
+                        <p class="text-slate-600 leading-relaxed italic text-[11px]">
+                            "{{ r.impression if r.impression else r.q1_difficult }}"
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-3.5 rounded-xl border border-slate-100 space-y-1">
+                        <span class="font-bold text-indigo-700 text-[11px] block flex items-center space-x-1">
+                            <i data-lucide="message-square" class="w-3 h-3 text-indigo-500"></i>
+                            <span>Pesan & Masukan:</span>
+                        </span>
+                        <p class="text-slate-600 leading-relaxed italic text-[11px]">
+                            "{{ r.message if r.message else r.q2_strategy }}"
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

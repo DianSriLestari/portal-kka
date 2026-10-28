@@ -1,0 +1,320 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kelola Akun Siswa - Portal KKA Fase E{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header & Action Buttons -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-black text-slate-800">Manajemen Akun Siswa</h1>
+            <p class="text-xs text-slate-500 mt-1">Tambah akun siswa manual, import massal via Excel (.xlsx), atau setujui permohonan reset password siswa.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Download Format Excel -->
+            <a href="/guru/siswa/download-template" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-sm transition flex items-center space-x-1.5" title="Download template file Excel untuk tambah siswa">
+                <i data-lucide="download" class="w-4 h-4"></i>
+                <span>Unduh Format Excel</span>
+            </a>
+            <!-- Upload Excel Import -->
+            <button onclick="document.getElementById('modalImportExcel').classList.remove('hidden')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-sm transition flex items-center space-x-1.5">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Import File Excel</span>
+            </button>
+            <!-- Manual Add Student -->
+            <button onclick="document.getElementById('modalTambahSiswa').classList.remove('hidden')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-md transition flex items-center space-x-1.5">
+                <i data-lucide="user-plus" class="w-4 h-4"></i>
+                <span>+ Siswa Baru</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    {% if msg %}
+    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2">
+        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+        <span>{{ msg }}</span>
+    </div>
+    {% endif %}
+    {% if err %}
+    <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-2xl text-xs flex items-center space-x-2">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+        <span>{{ err }}</span>
+    </div>
+    {% endif %}
+
+    <!-- PERMINTAAN RESET PASSWORD SISWA SECTION -->
+    <div id="reset-section" class="bg-white rounded-3xl border {% if pending_resets > 0 %}border-amber-300 ring-2 ring-amber-200/50{% else %}border-slate-100{% endif %} shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <i data-lucide="key" class="w-4 h-4"></i>
+                </div>
+                <div>
+                    <span class="text-xs font-bold text-slate-800 uppercase tracking-wider block">Permintaan Reset Kata Sandi Siswa</span>
+                    <span class="text-[11px] text-slate-400">Siswa yang mengajukan lupa password di halaman login</span>
+                </div>
+            </div>
+            {% if pending_resets > 0 %}
+                <span class="bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full text-xs animate-pulse">
+                    {{ pending_resets }} Menunggu Persetujuan
+                </span>
+            {% else %}
+                <span class="text-xs text-slate-400">Tidak ada permintaan pending</span>
+            {% endif %}
+        </div>
+
+        {% if reset_requests %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Nama Siswa</th>
+                        <th class="py-3 px-4">Username / NISN</th>
+                        <th class="py-3 px-4">Kelas</th>
+                        <th class="py-3 px-4">Waktu Permintaan</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4">Sandi Sementara</th>
+                        <th class="py-3 px-4 text-right">Tindakan Guru</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for req in reset_requests %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-800">{{ req.full_name }}</td>
+                        <td class="py-3.5 px-4 font-mono text-indigo-600">@{{ req.username }}</td>
+                        <td class="py-3.5 px-4 text-slate-600">{{ req.class_name }}</td>
+                        <td class="py-3.5 px-4 text-slate-400 font-mono text-[11px]">{{ req.created_at[0:16] }}</td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if req.status == 'pending' %}
+                                <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Pending</span>
+                            {% elif req.status == 'approved' %}
+                                <span class="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full text-[10px] font-bold">Disetujui</span>
+                            {% else %}
+                                <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px]">Ditolak</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 font-mono font-bold text-indigo-700">
+                            {{ req.temp_password if req.temp_password else '-' }}
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-1">
+                            {% if req.status == 'pending' %}
+                            <button onclick="openApproveResetModal({{ req.id }}, '{{ req.full_name }}', '{{ req.username }}')" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition text-[11px]">
+                                Setujui & Beri Sandi
+                            </button>
+                            <form action="/guru/siswa/reset-request/reject/{{ req.id }}" method="POST" class="inline" onsubmit="return confirm('Tolak permintaan reset ini?')">
+                                <button type="submit" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1.5 rounded-xl transition text-[11px]">
+                                    Tolak
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-slate-400 text-[11px] italic">Sudah diproses</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-6 text-center text-slate-400 text-xs italic">
+            Belum ada permintaan reset kata sandi dari siswa.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Student List Table -->
+    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Daftar Siswa Terdaftar ({{ siswa_list|length }} Murid)</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-100 uppercase tracking-wider">
+                    <tr>
+                        <th class="py-3 px-4">Nama Lengkap</th>
+                        <th class="py-3 px-4">Username / NISN</th>
+                        <th class="py-3 px-4">Kelas</th>
+                        <th class="py-3 px-4 text-center">Status Sandi</th>
+                        <th class="py-3 px-4">Aktivitas Terakhir</th>
+                        <th class="py-3 px-4 text-center">Total Aksi</th>
+                        <th class="py-3 px-4 text-right">Tindakan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for s in siswa_list %}
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-3.5 px-4 font-bold text-slate-800">{{ s.full_name }}</td>
+                        <td class="py-3.5 px-4 font-mono text-indigo-600 font-medium">@{{ s.username }}</td>
+                        <td class="py-3.5 px-4">
+                            <span class="bg-teal-50 text-teal-800 px-2 py-0.5 rounded text-[11px] font-semibold">{{ s.class_name }}</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            {% if s.must_change_password == 1 %}
+                                <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-[10px] font-bold" title="Siswa belum memperbarui kata sandi baru">
+                                    Sandi Sementara
+                                </span>
+                            {% else %}
+                                <span class="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-medium">
+                                    Aktif
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-500 text-[11px]">
+                            {{ s.last_seen if s.last_seen else 'Belum pernah login' }}
+                        </td>
+                        <td class="py-3.5 px-4 text-center">
+                            <span class="bg-slate-100 px-2 py-0.5 rounded font-mono font-semibold text-slate-700">{{ s.total_activities }}</span>
+                        </td>
+                        <td class="py-3.5 px-4 text-right space-x-1">
+                            <!-- Reset Password Button -->
+                            <button onclick="openResetModal({{ s.id }}, '{{ s.full_name }}')" class="p-1.5 hover:bg-indigo-50 text-indigo-600 rounded-lg transition" title="Reset Kata Sandi Manual">
+                                <i data-lucide="key" class="w-4 h-4"></i>
+                            </button>
+                            <!-- Delete Button -->
+                            <form action="/guru/siswa/hapus/{{ s.id }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus akun siswa ini? Semua riwayat nilai dan lognya akan ikut terhapus.')">
+                                <button type="submit" class="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition" title="Hapus Akun">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- MODAL IMPORT SISWA VIA EXCEL -->
+<div id="modalImportExcel" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                <i data-lucide="file-spreadsheet" class="w-5 h-5 text-teal-600"></i>
+                <span>Import Siswa dari File Excel</span>
+            </h3>
+            <button onclick="document.getElementById('modalImportExcel').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="p-4 bg-teal-50 rounded-2xl border border-teal-100 text-xs text-teal-900 mb-4 space-y-2">
+            <p class="font-bold">Langkah Import Siswa:</p>
+            <ol class="list-decimal pl-4 space-y-1 text-[11px]">
+                <li>Unduh format template Excel resmi di bawah ini.</li>
+                <li>Isi daftar NISN/Username, Nama Lengkap, Kelas, dan Password.</li>
+                <li>Simpan file (.xlsx), lalu pilih file dan klik <strong>Import Data</strong>.</li>
+            </ol>
+            <div class="pt-1">
+                <a href="/guru/siswa/download-template" class="inline-flex items-center space-x-1.5 bg-white text-teal-800 border border-teal-200 px-3 py-1.5 rounded-xl font-bold hover:bg-teal-100/50 transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-teal-600"></i>
+                    <span>Unduh Format Template (.xlsx)</span>
+                </a>
+            </div>
+        </div>
+
+        <form action="/guru/siswa/import-excel" method="POST" enctype="multipart/form-data" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Pilih File Excel Siswa (.xlsx / .csv)</label>
+                <input type="file" name="file" required accept=".xlsx, .xls, .csv" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-teal-50 file:text-teal-700 file:font-semibold hover:file:bg-teal-100">
+            </div>
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modalImportExcel').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Batal</button>
+                <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-xl font-bold shadow-md">Import Sekarang</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL APPROVE RESET REQUEST -->
+<div id="modalApproveReset" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
+        <h3 class="font-bold text-slate-800 text-base mb-1">Setujui Reset Kata Sandi</h3>
+        <p class="text-xs text-slate-500 mb-4" id="approveResetSubtext">Siswa: -</p>
+        <form id="formApproveReset" method="POST" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Kata Sandi Sementara</label>
+                <input type="text" name="temp_password" id="inputTempPassword" required value="KKA-2026" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-indigo-700">
+                <span class="text-[10px] text-slate-400 mt-1 block">Siswa akan menggunakan sandi ini untuk login pertama kali dan langsung diarahkan membuat sandi baru.</span>
+            </div>
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modalApproveReset').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Batal</button>
+                <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold">Setujui Reset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Tambah Siswa Manual -->
+<div id="modalTambahSiswa" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-slate-800 text-lg">Tambah Siswa Baru</h3>
+            <button onclick="document.getElementById('modalTambahSiswa').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form action="/guru/siswa/tambah" method="POST" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Lengkap Siswa</label>
+                <input type="text" name="full_name" required placeholder="Contoh: Budi Santoso" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Username / NISN</label>
+                <input type="text" name="username" required placeholder="Contoh: 1006 atau siswa6" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Kata Sandi (Password Awal)</label>
+                <input type="text" name="password" required value="siswa123" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Rombel / Kelas</label>
+                <input type="text" name="class_name" required value="X-1" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modalTambahSiswa').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Batal</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold">Simpan Akun</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Reset Password Manual -->
+<div id="modalResetPw" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-slate-100">
+        <h3 class="font-bold text-slate-800 text-base mb-1">Reset Kata Sandi Manual</h3>
+        <p class="text-xs text-slate-500 mb-4" id="resetModalSubtext">Siswa: -</p>
+        <form id="formResetPw" method="POST" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Kata Sandi Baru / Sementara</label>
+                <input type="text" name="new_password" required value="siswa123" class="w-full p-2.5 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-mono">
+            </div>
+            <div class="pt-2 flex justify-end space-x-2">
+                <button type="button" onclick="document.getElementById('modalResetPw').classList.add('hidden')" class="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold">Batal</button>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl font-bold">Ubah Sandi</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function openResetModal(id, name) {
+        document.getElementById('resetModalSubtext').innerText = 'Atur ulang kata sandi untuk: ' + name;
+        document.getElementById('formResetPw').action = '/guru/siswa/reset-password/' + id;
+        document.getElementById('modalResetPw').classList.remove('hidden');
+    }
+
+    function openApproveResetModal(id, name, username) {
+        document.getElementById('approveResetSubtext').innerText = 'Menyetujui reset untuk: ' + name + ' (@' + username + ')';
+        document.getElementById('formApproveReset').action = '/guru/siswa/reset-request/approve/' + id;
+        document.getElementById('inputTempPassword').value = 'KKA-' + Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('modalApproveReset').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

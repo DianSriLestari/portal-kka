@@ -1,0 +1,927 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Simulasi 3: Dry-Run Flowchart Kasir Kantin - Portal KKA{% endblock %}
+
+{% block extra_head %}
+<style>
+    @keyframes flowDash {
+        to {
+            stroke-dashoffset: -24;
+        }
+    }
+    .fc-node {
+        transition: opacity 0.35s ease, filter 0.35s ease;
+    }
+    .fc-shape {
+        transition: stroke 0.35s ease, stroke-width 0.35s ease, fill 0.35s ease, filter 0.35s ease;
+    }
+    .fc-node-dimmed {
+        opacity: 0.22 !important;
+        filter: grayscale(85%);
+    }
+    .fc-node-active {
+        opacity: 1 !important;
+        filter: drop-shadow(0 0 14px rgba(245, 158, 11, 0.85));
+    }
+    .fc-node-active rect, .fc-node-active polygon {
+        stroke-width: 4 !important;
+    }
+    .fc-path-active {
+        stroke-width: 4 !important;
+        stroke-dasharray: 8 4;
+        animation: flowDash 0.8s linear infinite;
+    }
+    .fc-path-dimmed {
+        opacity: 0.15;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+
+    <!-- Header & Navigation -->
+    <div class="flex items-center justify-between">
+        <a href="/siswa/simulasi" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center space-x-1.5 bg-indigo-50 px-3 py-1.5 rounded-xl border border-indigo-100 transition">
+            <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <span>Kembali ke Hub Lab Simulasi</span>
+        </a>
+        <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-500 font-mono">Simulasi 3 • Algoritma & Flowchart</span>
+            <a href="/siswa/modul/3?tab=simulasi" class="text-xs font-bold text-indigo-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition shadow-sm">
+                Buka di Modul 3 &rarr;
+            </a>
+        </div>
+    </div>
+
+    <!-- Title & Description Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl space-y-3 border border-indigo-800/40">
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="bg-amber-500 text-slate-950 font-black px-3 py-1 rounded-full text-[10px] uppercase tracking-wider shadow">
+                Pertemuan 3 • TP 3 Berpikir Komputasional
+            </span>
+            <span class="bg-teal-500/20 text-teal-300 border border-teal-400/30 text-xs px-3 py-1 rounded-full font-medium">
+                ⚙️ Animasi Diagram Alir (Flowchart Runner)
+            </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">
+            Dry-Run Engine: Flowchart Algoritma Pengarahan Kasir
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-300 max-w-3xl leading-relaxed">
+            Saksikan bagaimana komputer mengeksekusi instruksi diagram alir langkah demi langkah menggunakan 4 simbol standar:
+            <strong>Terminator (Oval)</strong>, <strong>Input / Output (Jajargenjang)</strong>, <strong>Percabangan (Decision / Belah Ketupat)</strong>, dan <strong>Proses (Persegi Panjang)</strong>.
+            Uji variabel secara bebas dan amati bagaimana logika menangani <strong>Kasus Khusus (Edge Case)</strong> saat Kasir 1 tutup!
+        </p>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1. PANDUAN LEGENDA 4 SIMBOL STANDAR FLOWCHART (ANSI / ISO)                -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                <i data-lucide="shapes" class="w-4 h-4 text-indigo-600"></i>
+                <span>Legenda Simbol Standar Flowchart (ANSI / ISO):</span>
+            </span>
+            <span class="text-[11px] text-slate-400 font-mono">Standar Informatika Fase E</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <!-- 1. Terminator -->
+            <div class="p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-1">
+                <div class="flex items-center space-x-1.5 text-emerald-800 font-bold text-[11px]">
+                    <span class="w-3.5 h-3.5 rounded-full bg-emerald-600 inline-block shrink-0"></span>
+                    <span>Terminator (Oval)</span>
+                </div>
+                <p class="text-[10px] text-slate-600 leading-snug">Menandai awal <code>[MULAI]</code> dan akhir <code>[SELESAI]</code> aliran program.</p>
+            </div>
+
+            <!-- 2. Input / Output -->
+            <div class="p-3 rounded-2xl bg-sky-50/70 border border-sky-200 space-y-1">
+                <div class="flex items-center space-x-1.5 text-sky-800 font-bold text-[11px]">
+                    <span class="w-3.5 h-3.5 transform -skew-x-12 bg-sky-600 inline-block shrink-0"></span>
+                    <span>Input / Output</span>
+                </div>
+                <p class="text-[10px] text-slate-600 leading-snug">Membaca data masukan murid atau mencetak keputusan hasil kasir.</p>
+            </div>
+
+            <!-- 3. Decision -->
+            <div class="p-3 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-1">
+                <div class="flex items-center space-x-1.5 text-amber-800 font-bold text-[11px]">
+                    <span class="w-3.5 h-3.5 rotate-45 bg-amber-500 inline-block shrink-0"></span>
+                    <span>Decision (Belah Ketupat)</span>
+                </div>
+                <p class="text-[10px] text-slate-600 leading-snug">Pemeriksaan kondisi Boolean: menghasilkan cabang <code>[YA]</code> atau <code>[TIDAK]</code>.</p>
+            </div>
+
+            <!-- 4. Proses -->
+            <div class="p-3 rounded-2xl bg-indigo-50/70 border border-indigo-200 space-y-1">
+                <div class="flex items-center space-x-1.5 text-indigo-800 font-bold text-[11px]">
+                    <span class="w-3.5 h-3.5 rounded-sm bg-indigo-600 inline-block shrink-0"></span>
+                    <span>Proses (Persegi Panjang)</span>
+                </div>
+                <p class="text-[10px] text-slate-600 leading-snug">Instruksi penugasan variabel, misalnya menetapkan <code>tujuan = "Kasir 1"</code>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. PANEL VARIABEL INPUT & PRESET KASUS UJI                                -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center space-x-1.5">
+                <i data-lucide="sliders" class="w-4 h-4 text-indigo-600"></i>
+                <span>Parameter Variabel Uji (Test Data Input):</span>
+            </label>
+            <span class="text-[11px] text-slate-400">Atur angka di bawah atau pilih tombol preset</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                <label class="block font-bold text-slate-700 text-xs">Panjang Antrean Kasir 1 (antrean1):</label>
+                <input type="number" id="p3Antrean1" value="4" min="0" max="99" onchange="onInputChange()" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-slate-800 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                <span class="text-[10px] text-slate-500 block">Jumlah murid yang sedang antre</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                <label class="block font-bold text-slate-700 text-xs">Panjang Antrean Kasir 2 (antrean2):</label>
+                <input type="number" id="p3Antrean2" value="2" min="0" max="99" onchange="onInputChange()" class="w-full p-2.5 rounded-xl border border-slate-300 font-mono font-bold text-slate-800 text-sm bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                <span class="text-[10px] text-slate-500 block">Jumlah murid yang sedang antre</span>
+            </div>
+
+            <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1">
+                <label class="block font-bold text-slate-700 text-xs">Status Kasir 1 (status_k1):</label>
+                <select id="p3Kasir1Aktif" onchange="onInputChange()" class="w-full p-2.5 rounded-xl border border-slate-300 font-semibold text-slate-800 text-xs bg-white outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="true">Kasir 1 Buka & Melayani (Normal)</option>
+                    <option value="false">Kasir 1 TUTUP / Istirahat (Kasus Khusus)</option>
+                </select>
+                <span class="text-[10px] text-slate-500 block">Kondisi operasional kasir utama</span>
+            </div>
+        </div>
+
+        <!-- Preset Buttons -->
+        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wide mr-1">Preset Kasus Cepat:</span>
+            <button type="button" onclick="applyPreset(2, 5, true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold text-xs transition border border-slate-200">
+                Case 1: Kasir 1 Lebih Pendek (2 vs 5)
+            </button>
+            <button type="button" onclick="applyPreset(6, 2, true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold text-xs transition border border-slate-200">
+                Case 2: Kasir 2 Lebih Pendek (6 vs 2)
+            </button>
+            <button type="button" onclick="applyPreset(1, 4, false)" class="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-800 font-semibold text-xs transition border border-rose-200">
+                ⚠️ Case 3: Kasir 1 Tutup (Edge Case)
+            </button>
+            <button type="button" onclick="applyPreset(3, 3, true)" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 font-semibold text-xs transition border border-slate-200">
+                Case 4: Antrean Sama (3 vs 3)
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 3. KONTROL STEPPER & TOOLBAR ANIMASI                                      -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center space-x-2">
+                <button type="button" onclick="togglePlayPauseTrace()" id="btnPlayTrace" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-sm transition flex items-center space-x-1.5">
+                    <i data-lucide="play" id="iconPlayTrace" class="w-4 h-4"></i>
+                    <span id="textPlayTrace">Putar Animasi Flowchart</span>
+                </button>
+
+                <button type="button" onclick="prevStepTrace()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Sebelumnya">
+                    <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                </button>
+
+                <button type="button" onclick="nextStepTrace()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Langkah Berikutnya">
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                </button>
+
+                <button type="button" onclick="resetTraceFlowchart()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs p-2.5 rounded-xl transition" title="Reset Diagram">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center space-x-3 text-xs">
+                <div class="flex items-center space-x-1.5 text-slate-500">
+                    <span class="text-[11px] font-semibold">Kecepatan:</span>
+                    <select id="traceSpeedSelect" onchange="changeTraceSpeed()" class="p-1.5 rounded-lg border border-slate-200 text-xs font-semibold bg-white outline-none">
+                        <option value="2500">Santai (2.5 detik)</option>
+                        <option value="1500" selected>Normal (1.5 detik)</option>
+                        <option value="800">Cepat (0.8 detik)</option>
+                    </select>
+                </div>
+
+                <div class="w-24 bg-slate-100 rounded-full h-2 overflow-hidden hidden sm:block">
+                    <div id="traceProgressFill" class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: 0%;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 4. KANVAS DIAGRAM ALIR (FLOWCHART SVG CANVAS)                             -->
+    <!-- ========================================================================= -->
+    <div class="bg-slate-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl border border-slate-800 space-y-5 relative overflow-hidden">
+        <!-- Status Bar -->
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800/80 pb-3 text-xs font-mono">
+            <div class="flex items-center space-x-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping"></span>
+                <span class="text-amber-400 font-bold" id="flowchartStatusText">Siap: Klik 'Putar Animasi Flowchart' atau 'Langkah Berikutnya'</span>
+            </div>
+            <span class="text-slate-400 text-[11px]" id="flowchartStepCounter">Langkah 0 dari 7</span>
+        </div>
+
+        <!-- SVG Interactive Container -->
+        <div class="overflow-x-auto py-2">
+            <svg id="flowchartSvg" viewBox="0 0 920 830" class="w-full max-w-4xl mx-auto h-auto transition-all duration-300">
+                <defs>
+                    <!-- Arrowhead Marker (Default) -->
+                    <marker id="arrow-default" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+                    </marker>
+                    <!-- Arrowhead Marker (Active Indigo) -->
+                    <marker id="arrow-active" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#818cf8" />
+                    </marker>
+                    <!-- Arrowhead Marker (Active Green - YA) -->
+                    <marker id="arrow-true" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
+                    </marker>
+                    <!-- Arrowhead Marker (Active Rose - TIDAK) -->
+                    <marker id="arrow-false" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#f87171" />
+                    </marker>
+                </defs>
+
+                <!-- FLOWLINES (BACKGROUND LAYER) -->
+                <!-- Line 1 to 2 -->
+                <path id="path_1_2" d="M 460 69 L 460 105" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+                
+                <!-- Line 2 to 3 -->
+                <path id="path_2_3" d="M 460 177 L 460 218" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+                
+                <!-- Branch from Decision 1: YA (Buka) -> Goes down to Decision 2 -->
+                <path id="path_3_4_ya" d="M 460 342 L 460 414" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                <!-- Branch from Decision 1: TIDAK (Tutup) -> Bypass to Process B -->
+                <path id="path_3_5b_tidak" d="M 625 280 L 760 280 L 760 535" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                <!-- Branch from Decision 2: YA (antrean1 <= antrean2) -> Goes left and down to Process A -->
+                <path id="path_4_5a_ya" d="M 295 476 L 160 476 L 160 535" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                <!-- Branch from Decision 2: TIDAK (antrean1 > antrean2) -> Goes right and down to Process B -->
+                <path id="path_4_5b_tidak" d="M 625 476 L 760 476 L 760 535" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                <!-- Merge Line from Process A to Output -->
+                <path id="path_5a_6" d="M 160 605 L 160 628 L 460 628 L 460 642" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                <!-- Merge Line from Process B to Output -->
+                <path id="path_5b_6" d="M 760 605 L 760 628 L 460 628" stroke="#475569" stroke-width="2.5" fill="none" />
+
+                <!-- Line 6 to 7 -->
+                <path id="path_6_7" d="M 460 716 L 460 750" stroke="#475569" stroke-width="2.5" fill="none" marker-end="url(#arrow-default)" />
+
+                <!-- BRANCH LABELS (FLOATING PILLS) -->
+                <!-- Label Decision 1: YA -->
+                <g id="lbl_d1_ya" transform="translate(460, 378)">
+                    <rect x="-42" y="-11" width="84" height="22" rx="11" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#34d399" text-anchor="middle">[YA: BUKA]</text>
+                </g>
+
+                <!-- Label Decision 1: TIDAK (EDGE CASE) -->
+                <g id="lbl_d1_tidak" transform="translate(695, 269)">
+                    <rect x="-50" y="-11" width="100" height="22" rx="11" fill="#881337" stroke="#f43f5e" stroke-width="1.5"/>
+                    <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#fda4af" text-anchor="middle">[TIDAK: TUTUP]</text>
+                </g>
+
+                <!-- Label Decision 2: YA -->
+                <g id="lbl_d2_ya" transform="translate(225, 465)">
+                    <rect x="-46" y="-11" width="92" height="22" rx="11" fill="#064e3b" stroke="#10b981" stroke-width="1.5"/>
+                    <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#34d399" text-anchor="middle">[YA: Q1 ≤ Q2]</text>
+                </g>
+
+                <!-- Label Decision 2: TIDAK -->
+                <g id="lbl_d2_tidak" transform="translate(695, 465)">
+                    <rect x="-50" y="-11" width="100" height="22" rx="11" fill="#78350f" stroke="#f59e0b" stroke-width="1.5"/>
+                    <text x="0" y="4" font-size="10" font-family="monospace" font-weight="bold" fill="#fde68a" text-anchor="middle">[TIDAK: Q1 > Q2]</text>
+                </g>
+
+                <!-- FLOWCHART NODES -->
+
+                <!-- NODE 1: TERMINATOR MULAI -->
+                <g id="fc_node_1" class="fc-node transition-all duration-300">
+                    <rect x="350" y="15" width="220" height="54" rx="27" ry="27" fill="#0f172a" stroke="#10b981" stroke-width="2.5" class="fc-shape" />
+                    <text x="460" y="36" font-size="9.5" font-family="monospace" font-weight="900" fill="#34d399" text-anchor="middle" letter-spacing="1">● TERMINATOR</text>
+                    <text x="460" y="54" font-size="13.5" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">MULAI (START)</text>
+                </g>
+
+                <!-- NODE 2: INPUT / OUTPUT (JAJARGENJANG / PARALLELOGRAM) -->
+                <g id="fc_node_2" class="fc-node transition-all duration-300">
+                    <polygon points="290,105 650,105 628,177 268,177" fill="#0f172a" stroke="#0ea5e9" stroke-width="2.5" class="fc-shape" />
+                    <text x="460" y="126" font-size="9.5" font-family="monospace" font-weight="900" fill="#38bdf8" text-anchor="middle" letter-spacing="1">▱ INPUT DATA</text>
+                    <text x="460" y="146" font-size="12" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">BACA: antrean1, antrean2, status_k1</text>
+                    <text x="460" y="165" font-size="11" font-family="monospace" font-weight="bold" fill="#bae6fd" text-anchor="middle" id="fc_val_input">Q1 = 4  |  Q2 = 2  |  Kasir 1: BUKA</text>
+                </g>
+
+                <!-- NODE 3: DECISION 1 (BELAH KETUPAT / DIAMOND) -->
+                <g id="fc_node_3" class="fc-node transition-all duration-300">
+                    <polygon points="460,218 625,280 460,342 295,280" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5" class="fc-shape" />
+                    <text x="460" y="262" font-size="9.5" font-family="monospace" font-weight="900" fill="#fbbf24" text-anchor="middle" letter-spacing="1">◇ DECISION 1</text>
+                    <text x="460" y="282" font-size="13" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">Kasir 1 BUKA?</text>
+                    <text x="460" y="302" font-size="11" font-family="monospace" font-weight="bold" fill="#fde68a" text-anchor="middle" id="fc_val_dec1">[ Status: BUKA ]</text>
+                </g>
+
+                <!-- NODE 4: DECISION 2 (BELAH KETUPAT / DIAMOND) -->
+                <g id="fc_node_4" class="fc-node transition-all duration-300">
+                    <polygon points="460,414 625,476 460,538 295,476" fill="#0f172a" stroke="#f59e0b" stroke-width="2.5" class="fc-shape" />
+                    <text x="460" y="458" font-size="9.5" font-family="monospace" font-weight="900" fill="#fbbf24" text-anchor="middle" letter-spacing="1">◇ DECISION 2</text>
+                    <text x="460" y="478" font-size="13" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">antrean1 ≤ antrean2 ?</text>
+                    <text x="460" y="498" font-size="11" font-family="monospace" font-weight="bold" fill="#fde68a" text-anchor="middle" id="fc_val_dec2">[ 4 ≤ 2 ? FALSE ]</text>
+                </g>
+
+                <!-- NODE 5A: PROSES A (PERSEGI PANJANG / RECTANGLE) -->
+                <g id="fc_node_5a" class="fc-node transition-all duration-300">
+                    <rect x="45" y="535" width="230" height="70" rx="10" ry="10" fill="#0f172a" stroke="#6366f1" stroke-width="2.5" class="fc-shape" />
+                    <text x="160" y="556" font-size="9.5" font-family="monospace" font-weight="900" fill="#818cf8" text-anchor="middle" letter-spacing="1">▭ PROSES A</text>
+                    <text x="160" y="576" font-size="13" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">tujuan = "Kasir 1"</text>
+                    <text x="160" y="593" font-size="10" font-family="sans-serif" fill="#c7d2fe" text-anchor="middle">(Antrean Lebih Pendek/Sama)</text>
+                </g>
+
+                <!-- NODE 5B: PROSES B (PERSEGI PANJANG / RECTANGLE) -->
+                <g id="fc_node_5b" class="fc-node transition-all duration-300">
+                    <rect x="645" y="535" width="230" height="70" rx="10" ry="10" fill="#0f172a" stroke="#6366f1" stroke-width="2.5" class="fc-shape" />
+                    <text x="760" y="556" font-size="9.5" font-family="monospace" font-weight="900" fill="#818cf8" text-anchor="middle" letter-spacing="1">▭ PROSES B</text>
+                    <text x="760" y="576" font-size="13" font-family="sans-serif" font-weight="bold" fill="#ffffff" text-anchor="middle">tujuan = "Kasir 2"</text>
+                    <text x="760" y="593" font-size="10" font-family="sans-serif" fill="#c7d2fe" text-anchor="middle" id="fc_proc_b_reason">(Kasir 1 Tutup / Q2 Singkat)</text>
+                </g>
+
+                <!-- NODE 6: OUTPUT HASIL (JAJARGENJANG / PARALLELOGRAM) -->
+                <g id="fc_node_6" class="fc-node transition-all duration-300">
+                    <polygon points="270,642 670,642 648,716 248,716" fill="#0f172a" stroke="#0ea5e9" stroke-width="2.5" class="fc-shape" />
+                    <text x="460" y="663" font-size="9.5" font-family="monospace" font-weight="900" fill="#38bdf8" text-anchor="middle" letter-spacing="1">▱ OUTPUT KEPUTUSAN</text>
+                    <text x="460" y="683" font-size="13" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle" id="fc_val_output">CETAK: Arahkan ke Kasir X</text>
+                    <text x="460" y="702" font-size="10.5" font-family="sans-serif" fill="#bae6fd" text-anchor="middle" id="fc_val_outdesc">Instruksi hasil evaluasi algoritma</text>
+                </g>
+
+                <!-- NODE 7: TERMINATOR SELESAI -->
+                <g id="fc_node_7" class="fc-node transition-all duration-300">
+                    <rect x="350" y="750" width="220" height="54" rx="27" ry="27" fill="#0f172a" stroke="#10b981" stroke-width="2.5" class="fc-shape" />
+                    <text x="460" y="771" font-size="9.5" font-family="monospace" font-weight="900" fill="#34d399" text-anchor="middle" letter-spacing="1">● TERMINATOR</text>
+                    <text x="460" y="789" font-size="13.5" font-family="sans-serif" font-weight="900" fill="#ffffff" text-anchor="middle">SELESAI (END)</text>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 5. TABEL REKAM UJI TELUSUR (TRACE TABLE)                                  -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <h4 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+                    <i data-lucide="table" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Tabel Rekam Uji Telusur (Trace Table Matrix)</span>
+                </h4>
+                <p class="text-xs text-slate-500 mt-0.5">Merekam status memori variabel dan evaluasi percabangan logika setiap kali langkah dieksekusi.</p>
+            </div>
+            <button type="button" onclick="clearTraceTable()" class="text-xs font-bold text-slate-500 hover:text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl transition">
+                Bersihkan Tabel
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs font-mono">
+                <thead class="bg-slate-100 text-slate-600 border-b border-slate-200">
+                    <tr>
+                        <th class="py-3 px-4 w-12 text-center">No</th>
+                        <th class="py-3 px-4">Bentuk Simbol</th>
+                        <th class="py-3 px-4">Blok Instruksi</th>
+                        <th class="py-3 px-4">Nilai Variabel di Memori</th>
+                        <th class="py-3 px-4">Evaluasi Logika</th>
+                        <th class="py-3 px-4">Keluaran / Status</th>
+                    </tr>
+                </thead>
+                <tbody id="traceTableBody" class="divide-y divide-slate-100 text-slate-700">
+                    <tr>
+                        <td colspan="6" class="py-6 text-center text-slate-400 italic font-sans text-xs">
+                            Tekan tombol <strong>"Putar Animasi Flowchart"</strong> atau <strong>"Langkah Berikutnya"</strong> untuk merekam langkah telusur ke tabel.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 6. KOTAK PENJELASAN PEDAGOGIS (DEEP LEARNING INSIGHT)                      -->
+    <!-- ========================================================================= -->
+    <div class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm space-y-3">
+        <div class="flex items-center space-x-2 text-indigo-700 font-bold text-xs uppercase tracking-wider">
+            <div class="w-7 h-7 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <i data-lucide="lightbulb" class="w-4 h-4 text-indigo-600"></i>
+            </div>
+            <span>Pelajaran Berpikir Komputasional: Mengapa Menggunakan Flowchart & Simbol Berbeda?</span>
+        </div>
+
+        <p class="text-xs sm:text-sm text-slate-700 leading-relaxed bg-indigo-50/40 p-4 rounded-2xl border border-indigo-100">
+            Dalam berpikir komputasional, <strong>Flowchart</strong> adalah representasi grafis algoritma yang menggunakan konvensi simbol geometris standar internasional. Simbol <strong>Belah Ketupat (Decision)</strong> merupakan titik krusial di mana komputer mengevaluasi kondisi Boolean (<code>True</code> / <code>False</code>). Dengan melakukan <strong>Dry-Run (Uji Telusur)</strong> manual, programmer dapat mendeteksi celah kesalahan (<em>bug</em>) dan kasus batas (<em>edge cases</em>) sebelum menulis ribuan baris kode program.
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-[11px]">
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-800 block mb-0.5">🌱 Berkeadaban</span>
+                <span class="text-slate-500">Algoritma yang adil mengarahkan antrean tanpa pilih kasih dan menghargai waktu istirahat siswa.</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-800 block mb-0.5">💡 Bermakna</span>
+                <span class="text-slate-500">Menghubungkan logika percabangan matematika dengan situasi nyata operasional kantin sekolah.</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200">
+                <span class="font-bold text-slate-800 block mb-0.5">✨ Menggembirakan</span>
+                <span class="text-slate-500">Melihat aliran algoritma bergerak hidup dengan animasi warna-warni yang mudah dipahami.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 7. FORM SIMPAN CAPAIAN SIMULASI & LANJUT KE LKPD 3                        -->
+    <!-- ========================================================================= -->
+    <div class="bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/10 border-2 border-emerald-500/30 rounded-3xl p-6 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center space-x-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-md">
+                ✓
+            </div>
+            <div>
+                <h4 class="font-bold text-emerald-950 text-sm sm:text-base">Sudah Memahami Uji Telusur & Simbol Flowchart?</h4>
+                <p class="text-xs text-emerald-800 mt-0.5">
+                    Klik tombol di samping untuk menyimpan capaian simulasi Anda ke sistem dan melanjutkan ke pengerjaan LKPD 3.
+                </p>
+            </div>
+        </div>
+
+        <form method="POST" action="/siswa/simulasi/selesai/dry_run_simulator" class="shrink-0 w-full sm:w-auto">
+            <input type="hidden" name="lesson_id" value="3">
+            <button type="submit" class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 py-3 rounded-xl shadow-lg transition flex items-center justify-center space-x-2">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span>Simpan Capaian & Lanjut ke LKPD 3</span>
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // =========================================================================
+    // STATE & CONTROLLER FLOWCHART ANIMATOR
+    // =========================================================================
+    let traceStep = 0;
+    let tracePlaying = false;
+    let traceTimer = null;
+    let traceSpeed = 1500;
+    let traceRecords = [];
+
+    function onInputChange() {
+        const q1 = parseInt(document.getElementById('p3Antrean1')?.value) || 0;
+        const q2 = parseInt(document.getElementById('p3Antrean2')?.value) || 0;
+        const k1Aktif = document.getElementById('p3Kasir1Aktif')?.value === 'true';
+
+        // Update text inside SVG
+        const valInput = document.getElementById('fc_val_input');
+        if (valInput) {
+            valInput.textContent = `Q1 = ${q1}  |  Q2 = ${q2}  |  Kasir 1: ${k1Aktif ? 'BUKA' : 'TUTUP'}`;
+        }
+        const valDec1 = document.getElementById('fc_val_dec1');
+        if (valDec1) {
+            valDec1.textContent = k1Aktif ? `[ Status: BUKA ]` : `[ Status: TUTUP ]`;
+        }
+        const valDec2 = document.getElementById('fc_val_dec2');
+        if (valDec2) {
+            valDec2.textContent = `[ ${q1} ≤ ${q2} ? ${q1 <= q2 ? 'TRUE' : 'FALSE'} ]`;
+        }
+        const outText = document.getElementById('fc_val_output');
+        if (outText) outText.textContent = 'CETAK: Arahkan ke Kasir X';
+        const outDesc = document.getElementById('fc_val_outdesc');
+        if (outDesc) outDesc.textContent = 'Instruksi hasil evaluasi algoritma';
+
+        resetTraceFlowchart();
+    }
+
+    function applyPreset(q1, q2, k1Aktif) {
+        const in1 = document.getElementById('p3Antrean1');
+        const in2 = document.getElementById('p3Antrean2');
+        const selK1 = document.getElementById('p3Kasir1Aktif');
+        if (in1) in1.value = q1;
+        if (in2) in2.value = q2;
+        if (selK1) selK1.value = k1Aktif.toString();
+        onInputChange();
+        startPlayTrace();
+    }
+
+    function getTraceSequence() {
+        const q1 = parseInt(document.getElementById('p3Antrean1')?.value) || 0;
+        const q2 = parseInt(document.getElementById('p3Antrean2')?.value) || 0;
+        const k1Aktif = document.getElementById('p3Kasir1Aktif')?.value === 'true';
+
+        const steps = [];
+
+        // Step 1: MULAI (TERMINATOR)
+        steps.push({
+            nodeId: 'fc_node_1',
+            pathId: null,
+            symbolType: 'Terminator (Oval)',
+            symbolColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-500',
+            blockName: 'MULAI (START)',
+            memoryState: `antrean1=?, antrean2=?, status_k1=?`,
+            conditionEval: '-',
+            outputStatus: 'Program dimulai',
+            statusDesc: 'Langkah 1: Mengawali eksekusi program diagram alir [TERMINATOR: MULAI]'
+        });
+
+        // Step 2: BACA INPUT (INPUT / OUTPUT)
+        steps.push({
+            nodeId: 'fc_node_2',
+            pathId: 'path_1_2',
+            symbolType: 'Input / Output (Jajargenjang)',
+            symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+            blockName: 'BACA INPUT DATA',
+            memoryState: `antrean1=${q1}, antrean2=${q2}, status_k1=${k1Aktif ? 'BUKA' : 'TUTUP'}`,
+            conditionEval: 'Sukses membaca input',
+            outputStatus: 'Data antrean tersimpan di memori',
+            statusDesc: `Langkah 2: Membaca data masukan antrean1=${q1}, antrean2=${q2}, status=${k1Aktif ? 'BUKA' : 'TUTUP'} [INPUT / OUTPUT]`
+        });
+
+        // Step 3: DECISION 1 (Apakah Kasir 1 Buka?)
+        steps.push({
+            nodeId: 'fc_node_3',
+            pathId: 'path_2_3',
+            symbolType: 'Decision (Belah Ketupat)',
+            symbolColor: 'text-amber-300 bg-amber-950/60 border-amber-500',
+            blockName: 'Apakah Kasir 1 BUKA?',
+            memoryState: `status_k1=${k1Aktif ? 'BUKA' : 'TUTUP'}`,
+            conditionEval: k1Aktif ? 'TRUE (Kasir 1 Buka)' : 'FALSE (Kasir 1 TUTUP)',
+            outputStatus: k1Aktif ? 'Ambil Cabang [YA: BUKA] ➔ Lanjut' : 'Ambil Cabang [TIDAK: TUTUP] ➔ Bypass ke Kasir 2',
+            statusDesc: k1Aktif 
+                ? 'Langkah 3: Kasir 1 Buka. Melanjutkan ke perbandingan antrean [DECISION 1: TRUE]'
+                : 'Langkah 3: ⚠️ Kasir 1 Sedang Tutup! Logika bypass kasus khusus diterapkan [DECISION 1: FALSE]'
+        });
+
+        if (!k1Aktif) {
+            // EDGE CASE: KASIR 1 TUTUP
+            // Step 4: PROSES B (tujuan = Kasir 2)
+            steps.push({
+                nodeId: 'fc_node_5b',
+                pathId: 'path_3_5b_tidak',
+                symbolType: 'Proses (Persegi Panjang)',
+                symbolColor: 'text-indigo-300 bg-indigo-950/60 border-indigo-500',
+                blockName: 'tujuan = "Kasir 2"',
+                memoryState: `tujuan="Kasir 2" (Bypass Tutup)`,
+                conditionEval: 'Eksekusi Penugasan Variabel',
+                outputStatus: 'Penetapan tujuan Kasir 2',
+                statusDesc: 'Langkah 4: Kasir 1 tutup, menetapkan tujuan = "Kasir 2" [PROSES B]'
+            });
+
+            // Step 5: OUTPUT HASIL
+            steps.push({
+                nodeId: 'fc_node_6',
+                pathId: 'path_5b_6',
+                symbolType: 'Input / Output (Jajargenjang)',
+                symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+                blockName: 'CETAK HASIL',
+                memoryState: `tujuan="Kasir 2"`,
+                conditionEval: '-',
+                outputStatus: 'Silakan ke KASIR 2 (Kasir 1 Tutup)',
+                outputTitle: 'Arahkan ke KASIR 2',
+                outputReason: '(Bypass: Kasir 1 Sedang Tutup)',
+                statusDesc: 'Langkah 5: Mencetak hasil instruksi ke layar murid [INPUT / OUTPUT]'
+            });
+
+            // Step 6: SELESAI
+            steps.push({
+                nodeId: 'fc_node_7',
+                pathId: 'path_6_7',
+                symbolType: 'Terminator (Oval)',
+                symbolColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-500',
+                blockName: 'SELESAI (END)',
+                memoryState: `Status: Sukses`,
+                conditionEval: 'Valid',
+                outputStatus: 'Program Berhenti Normal',
+                statusDesc: 'Langkah 6: Diagram alir selesai dijalankan dengan sempurna [TERMINATOR: SELESAI]'
+            });
+        } else {
+            // NORMAL FLOW: KASIR 1 BUKA
+            const conditionQ = q1 <= q2;
+
+            // Step 4: DECISION 2 (antrean1 <= antrean2?)
+            steps.push({
+                nodeId: 'fc_node_4',
+                pathId: 'path_3_4_ya',
+                symbolType: 'Decision (Belah Ketupat)',
+                symbolColor: 'text-amber-300 bg-amber-950/60 border-amber-500',
+                blockName: 'antrean1 ≤ antrean2 ?',
+                memoryState: `q1=${q1}, q2=${q2}`,
+                conditionEval: conditionQ ? `TRUE (${q1} ≤ ${q2})` : `FALSE (${q1} > ${q2})`,
+                outputStatus: conditionQ ? 'Ambil Cabang [YA: Q1≤Q2] ➔ Kasir 1' : 'Ambil Cabang [TIDAK: Q1>Q2] ➔ Kasir 2',
+                statusDesc: conditionQ
+                    ? `Langkah 4: Evaluasi ${q1} ≤ ${q2} adalah TRUE. Memilih Kasir 1 [DECISION 2: TRUE]`
+                    : `Langkah 4: Evaluasi ${q1} ≤ ${q2} adalah FALSE (${q1} > ${q2}). Memilih Kasir 2 [DECISION 2: FALSE]`
+            });
+
+            if (conditionQ) {
+                // Step 5: PROSES A (tujuan = Kasir 1)
+                steps.push({
+                    nodeId: 'fc_node_5a',
+                    pathId: 'path_4_5a_ya',
+                    symbolType: 'Proses (Persegi Panjang)',
+                    symbolColor: 'text-indigo-300 bg-indigo-950/60 border-indigo-500',
+                    blockName: 'tujuan = "Kasir 1"',
+                    memoryState: `tujuan="Kasir 1" (Q1 Singkat/Sama)`,
+                    conditionEval: 'Eksekusi Penugasan Variabel',
+                    outputStatus: 'Penetapan tujuan Kasir 1',
+                    statusDesc: 'Langkah 5: Antrean Kasir 1 lebih pendek atau sama, menetapkan tujuan = "Kasir 1" [PROSES A]'
+                });
+
+                // Step 6: OUTPUT HASIL
+                steps.push({
+                    nodeId: 'fc_node_6',
+                    pathId: 'path_5a_6',
+                    symbolType: 'Input / Output (Jajargenjang)',
+                    symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+                    blockName: 'CETAK HASIL',
+                    memoryState: `tujuan="Kasir 1"`,
+                    conditionEval: '-',
+                    outputStatus: 'Silakan ke KASIR 1 (Q1 Singkat/Sama)',
+                    outputTitle: 'Arahkan ke KASIR 1',
+                    outputReason: '(Antrean Lebih Pendek / Sama)',
+                    statusDesc: 'Langkah 6: Mencetak hasil instruksi ke layar murid [INPUT / OUTPUT]'
+                });
+            } else {
+                // Step 5: PROSES B (tujuan = Kasir 2)
+                steps.push({
+                    nodeId: 'fc_node_5b',
+                    pathId: 'path_4_5b_tidak',
+                    symbolType: 'Proses (Persegi Panjang)',
+                    symbolColor: 'text-indigo-300 bg-indigo-950/60 border-indigo-500',
+                    blockName: 'tujuan = "Kasir 2"',
+                    memoryState: `tujuan="Kasir 2" (Q2 Lebih Pendek)`,
+                    conditionEval: 'Eksekusi Penugasan Variabel',
+                    outputStatus: 'Penetapan tujuan Kasir 2',
+                    statusDesc: 'Langkah 5: Antrean Kasir 2 lebih pendek, menetapkan tujuan = "Kasir 2" [PROSES B]'
+                });
+
+                // Step 6: OUTPUT HASIL
+                steps.push({
+                    nodeId: 'fc_node_6',
+                    pathId: 'path_5b_6',
+                    symbolType: 'Input / Output (Jajargenjang)',
+                    symbolColor: 'text-sky-300 bg-sky-950/60 border-sky-500',
+                    blockName: 'CETAK HASIL',
+                    memoryState: `tujuan="Kasir 2"`,
+                    conditionEval: '-',
+                    outputStatus: 'Silakan ke KASIR 2 (Q2 Lebih Pendek)',
+                    outputTitle: 'Arahkan ke KASIR 2',
+                    outputReason: '(Antrean Kasir 2 Lebih Sedikit)',
+                    statusDesc: 'Langkah 6: Mencetak hasil instruksi ke layar murid [INPUT / OUTPUT]'
+                });
+            }
+
+            // Step 7: SELESAI
+            steps.push({
+                nodeId: 'fc_node_7',
+                pathId: 'path_6_7',
+                symbolType: 'Terminator (Oval)',
+                symbolColor: 'text-emerald-400 bg-emerald-950/60 border-emerald-500',
+                blockName: 'SELESAI (END)',
+                memoryState: `Status: Sukses`,
+                conditionEval: 'Optimal',
+                outputStatus: 'Program Berhenti Normal',
+                statusDesc: 'Langkah 7: Diagram alir selesai dijalankan dengan sempurna [TERMINATOR: SELESAI]'
+            });
+        }
+
+        return steps;
+    }
+
+    function renderTraceStep(stepIdx) {
+        const steps = getTraceSequence();
+        const total = steps.length;
+
+        const allNodes = ['fc_node_1', 'fc_node_2', 'fc_node_3', 'fc_node_4', 'fc_node_5a', 'fc_node_5b', 'fc_node_6', 'fc_node_7'];
+        const allPaths = ['path_1_2', 'path_2_3', 'path_3_4_ya', 'path_3_5b_tidak', 'path_4_5a_ya', 'path_4_5b_tidak', 'path_5a_6', 'path_5b_6', 'path_6_7'];
+
+        if (stepIdx <= 0) {
+            allNodes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.className.baseVal = "fc-node transition-all duration-300";
+            });
+            allPaths.forEach(id => {
+                const p = document.getElementById(id);
+                if (p) {
+                    p.setAttribute('stroke', '#475569');
+                    p.setAttribute('stroke-width', '2.5');
+                    p.setAttribute('marker-end', 'url(#arrow-default)');
+                    p.classList.remove('fc-path-active', 'fc-path-dimmed');
+                }
+            });
+            const statusEl = document.getElementById('flowchartStatusText');
+            if (statusEl) statusEl.textContent = "Siap: Klik 'Putar Animasi Flowchart' atau 'Langkah Berikutnya'";
+            const countEl = document.getElementById('flowchartStepCounter');
+            if (countEl) countEl.textContent = `Langkah 0 dari ${total}`;
+            const prog = document.getElementById('traceProgressFill');
+            if (prog) prog.style.width = '0%';
+            return;
+        }
+
+        const currentStepObj = steps[stepIdx - 1];
+        if (!currentStepObj) return;
+
+        allNodes.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (id === currentStepObj.nodeId) {
+                el.className.baseVal = "fc-node fc-node-active transition-all duration-300";
+            } else {
+                el.className.baseVal = "fc-node fc-node-dimmed transition-all duration-300";
+            }
+        });
+
+        allPaths.forEach(id => {
+            const p = document.getElementById(id);
+            if (!p) return;
+            p.classList.remove('fc-path-active');
+            p.classList.add('fc-path-dimmed');
+            p.setAttribute('stroke', '#334155');
+            p.setAttribute('stroke-width', '2');
+            p.setAttribute('marker-end', 'url(#arrow-default)');
+        });
+
+        if (currentStepObj.pathId) {
+            const curP = document.getElementById(currentStepObj.pathId);
+            if (curP) {
+                curP.classList.remove('fc-path-dimmed');
+                curP.classList.add('fc-path-active');
+                if (currentStepObj.pathId.includes('_ya')) {
+                    curP.setAttribute('stroke', '#34d399');
+                    curP.setAttribute('marker-end', 'url(#arrow-true)');
+                } else if (currentStepObj.pathId.includes('_tidak')) {
+                    curP.setAttribute('stroke', '#f87171');
+                    curP.setAttribute('marker-end', 'url(#arrow-false)');
+                } else {
+                    curP.setAttribute('stroke', '#818cf8');
+                    curP.setAttribute('marker-end', 'url(#arrow-active)');
+                }
+            }
+        }
+
+        if (currentStepObj.nodeId === 'fc_node_6') {
+            const outText = document.getElementById('fc_val_output');
+            const outDesc = document.getElementById('fc_val_outdesc');
+            if (outText) outText.textContent = `CETAK: ${currentStepObj.outputTitle || currentStepObj.outputStatus}`;
+            if (outDesc && currentStepObj.outputReason) outDesc.textContent = currentStepObj.outputReason;
+        }
+
+        const statusEl = document.getElementById('flowchartStatusText');
+        if (statusEl) statusEl.textContent = currentStepObj.statusDesc;
+        const countEl = document.getElementById('flowchartStepCounter');
+        if (countEl) countEl.textContent = `Langkah ${stepIdx} dari ${total}`;
+        const prog = document.getElementById('traceProgressFill');
+        if (prog) prog.style.width = Math.round((stepIdx / total) * 100) + '%';
+
+        addTraceRowIfNew(stepIdx, currentStepObj);
+    }
+
+    function addTraceRowIfNew(stepIdx, stepObj) {
+        if (!traceRecords.some(r => r.step === stepIdx)) {
+            traceRecords.push({ step: stepIdx, obj: stepObj });
+            renderTraceTable();
+        }
+    }
+
+    function renderTraceTable() {
+        const tbody = document.getElementById('traceTableBody');
+        if (!tbody) return;
+        if (traceRecords.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400 italic font-sans text-xs">Tekan tombol <strong>"Putar Animasi Flowchart"</strong> atau <strong>"Langkah Berikutnya"</strong> untuk merekam langkah telusur ke tabel.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = traceRecords.map(r => `
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <td class="py-2.5 px-4 font-bold text-center text-indigo-600">${r.step}</td>
+                <td class="py-2.5 px-4 font-semibold text-xs">
+                    <span class="inline-block px-2 py-0.5 rounded-md border text-[10px] ${r.obj.symbolColor}">
+                        ${r.obj.symbolType}
+                    </span>
+                </td>
+                <td class="py-2.5 px-4 font-bold text-slate-800">${r.obj.blockName}</td>
+                <td class="py-2.5 px-4 text-slate-600 font-mono text-[11px]">${r.obj.memoryState}</td>
+                <td class="py-2.5 px-4 font-bold ${r.obj.conditionEval.includes('TRUE') || r.obj.conditionEval.includes('Sukses') || r.obj.conditionEval.includes('Optimal') ? 'text-emerald-600' : (r.obj.conditionEval.includes('FALSE') ? 'text-rose-600' : 'text-amber-600')}">${r.obj.conditionEval}</td>
+                <td class="py-2.5 px-4 font-bold text-slate-800">${r.obj.outputStatus}</td>
+            </tr>
+        `).join('');
+    }
+
+    function nextStepTrace() {
+        const steps = getTraceSequence();
+        if (traceStep < steps.length) {
+            traceStep++;
+            renderTraceStep(traceStep);
+        } else {
+            pausePlayTrace();
+        }
+    }
+
+    function prevStepTrace() {
+        if (traceStep > 1) {
+            traceStep--;
+            renderTraceStep(traceStep);
+        } else {
+            resetTraceFlowchart();
+        }
+    }
+
+    function togglePlayPauseTrace() {
+        if (tracePlaying) {
+            pausePlayTrace();
+        } else {
+            startPlayTrace();
+        }
+    }
+
+    function startPlayTrace() {
+        tracePlaying = true;
+        const textEl = document.getElementById('textPlayTrace');
+        if (textEl) textEl.textContent = "Jeda Animasi";
+        const icon = document.getElementById('iconPlayTrace');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'pause');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        const steps = getTraceSequence();
+        if (traceStep >= steps.length) {
+            traceStep = 0;
+            clearTraceTable();
+        }
+
+        if (traceStep === 0) {
+            nextStepTrace();
+        }
+
+        if (traceTimer) clearInterval(traceTimer);
+        traceTimer = setInterval(() => {
+            const currentSteps = getTraceSequence();
+            if (traceStep < currentSteps.length) {
+                nextStepTrace();
+            } else {
+                pausePlayTrace();
+            }
+        }, traceSpeed);
+    }
+
+    function pausePlayTrace() {
+        tracePlaying = false;
+        if (traceTimer) {
+            clearInterval(traceTimer);
+            traceTimer = null;
+        }
+        const textEl = document.getElementById('textPlayTrace');
+        if (textEl) textEl.textContent = "Putar Animasi Flowchart";
+        const icon = document.getElementById('iconPlayTrace');
+        if (icon) {
+            icon.setAttribute('data-lucide', 'play');
+            if (window.lucide) lucide.createIcons();
+        }
+    }
+
+    function resetTraceFlowchart() {
+        pausePlayTrace();
+        traceStep = 0;
+        renderTraceStep(0);
+        const outText = document.getElementById('fc_val_output');
+        if (outText) outText.textContent = 'CETAK: Arahkan ke Kasir X';
+        const outDesc = document.getElementById('fc_val_outdesc');
+        if (outDesc) outDesc.textContent = 'Instruksi hasil evaluasi algoritma';
+    }
+
+    function changeTraceSpeed() {
+        traceSpeed = parseInt(document.getElementById('traceSpeedSelect')?.value) || 1500;
+        if (tracePlaying) {
+            pausePlayTrace();
+            startPlayTrace();
+        }
+    }
+
+    function clearTraceTable() {
+        traceRecords = [];
+        renderTraceTable();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        onInputChange();
+    });
+</script>
+{% endblock %}
