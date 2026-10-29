@@ -96,6 +96,10 @@ def kelola_siswa_page(request: Request, user: dict = Depends(require_guru), msg:
         """)
         siswa_list = [dict(row) for row in cursor.fetchall()]
 
+        # Distinct classes for filtering
+        cursor.execute("SELECT DISTINCT class_name FROM users WHERE role = 'siswa' AND class_name IS NOT NULL AND TRIM(class_name) != '' ORDER BY class_name ASC")
+        class_list = [r[0] for r in cursor.fetchall() if r[0]]
+
         # Password reset requests
         cursor.execute("""
             SELECT * FROM password_reset_requests 
@@ -108,6 +112,7 @@ def kelola_siswa_page(request: Request, user: dict = Depends(require_guru), msg:
         "user": user,
         "active_nav": "siswa",
         "siswa_list": siswa_list,
+        "class_list": class_list,
         "reset_requests": reset_requests,
         "pending_resets": pending_resets,
         "msg": msg,

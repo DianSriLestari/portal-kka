@@ -126,8 +126,64 @@
 
     <!-- Student List Table -->
     <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Daftar Siswa Terdaftar ({{ siswa_list|length }} Murid)</span>
+        <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-slate-50/50">
+            <div>
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider block">Daftar Siswa Terdaftar</span>
+                <span id="studentCountBadge" class="text-[11px] text-slate-400">Menampilkan <span id="visibleCount" class="font-bold text-indigo-600">{{ siswa_list|length }}</span> dari {{ siswa_list|length }} Murid</span>
+            </div>
+            
+            <!-- Tombol Reset Filter Cepat -->
+            <button type="button" onclick="resetStudentFilters()" id="btnResetFilter" class="hidden text-xs text-rose-600 hover:text-rose-700 font-bold flex items-center space-x-1.5 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl transition">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span>Reset Filter</span>
+            </button>
+        </div>
+
+        <!-- Filter Controls Bar -->
+        <div class="p-4 bg-white border-b border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <!-- 1. Pencarian Teks (Nama / NISN) -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Cari Siswa</label>
+                <div class="relative">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                    <input type="text" id="filterSearch" oninput="applyStudentFilters()" placeholder="Cari nama atau username..." 
+                           class="w-full pl-9 pr-8 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-xs">
+                    <button type="button" onclick="clearStudentSearch()" id="btnClearSearch" class="hidden absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 2. Filter Kelas / Rombel -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Filter Kelas</label>
+                <select id="filterClass" onchange="applyStudentFilters()" class="w-full py-2 px-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white text-slate-700 font-medium">
+                    <option value="">Semua Kelas</option>
+                    {% for c in class_list %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 3. Filter Status Kata Sandi -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Status Kata Sandi</label>
+                <select id="filterPasswordStatus" onchange="applyStudentFilters()" class="w-full py-2 px-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white text-slate-700 font-medium">
+                    <option value="">Semua Status Sandi</option>
+                    <option value="aktif">Aktif (Sudah Diperbarui)</option>
+                    <option value="sementara">Sandi Sementara (Perlu Ganti)</option>
+                </select>
+            </div>
+
+            <!-- 4. Filter Aktivitas Login -->
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">Status Keaktifan</label>
+                <select id="filterActivity" onchange="applyStudentFilters()" class="w-full py-2 px-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white text-slate-700 font-medium">
+                    <option value="">Semua Keaktifan</option>
+                    <option value="pernah">Sudah Pernah Login</option>
+                    <option value="belum">Belum Pernah Login</option>
+                </select>
+            </div>
         </div>
 
         <div class="overflow-x-auto">
@@ -143,9 +199,14 @@
                         <th class="py-3 px-4 text-right">Tindakan</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100" id="studentTableBody">
                     {% for s in siswa_list %}
-                    <tr class="hover:bg-slate-50 transition">
+                    <tr class="student-row hover:bg-slate-50 transition"
+                        data-name="{{ s.full_name|lower }}"
+                        data-username="{{ s.username|lower }}"
+                        data-class="{{ s.class_name }}"
+                        data-must-change="{{ s.must_change_password }}"
+                        data-has-login="{% if s.last_seen %}1{% else %}0{% endif %}">
                         <td class="py-3.5 px-4 font-bold text-slate-800">{{ s.full_name }}</td>
                         <td class="py-3.5 px-4 font-mono text-indigo-600 font-medium">@{{ s.username }}</td>
                         <td class="py-3.5 px-4">
@@ -182,6 +243,22 @@
                         </td>
                     </tr>
                     {% endfor %}
+
+                    <!-- Empty state jika filter tidak menemukan hasil -->
+                    <tr id="emptyFilterRow" class="hidden">
+                        <td colspan="7" class="py-10 text-center text-slate-400">
+                            <div class="flex flex-col items-center justify-center space-y-2">
+                                <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-1">
+                                    <i data-lucide="search-x" class="w-5 h-5"></i>
+                                </div>
+                                <p class="font-bold text-slate-700 text-xs">Tidak ada siswa yang sesuai dengan filter</p>
+                                <p class="text-[11px] text-slate-400">Coba ubah kata kunci pencarian atau sesuaikan pilihan filter kelas / status.</p>
+                                <button type="button" onclick="resetStudentFilters()" class="mt-2 text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl font-bold text-[11px] transition">
+                                    Reset Semua Filter
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -315,6 +392,102 @@
         document.getElementById('formApproveReset').action = '/guru/siswa/reset-request/approve/' + id;
         document.getElementById('inputTempPassword').value = 'KKA-' + Math.floor(1000 + Math.random() * 9000);
         document.getElementById('modalApproveReset').classList.remove('hidden');
+    }
+
+    // ==========================================
+    // FILTER SISWA INSTAN
+    // ==========================================
+    function applyStudentFilters() {
+        const searchInput = document.getElementById('filterSearch');
+        const search = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const selectedClass = document.getElementById('filterClass') ? document.getElementById('filterClass').value : '';
+        const selectedPwStatus = document.getElementById('filterPasswordStatus') ? document.getElementById('filterPasswordStatus').value : '';
+        const selectedActivity = document.getElementById('filterActivity') ? document.getElementById('filterActivity').value : '';
+        
+        const clearSearchBtn = document.getElementById('btnClearSearch');
+        if (clearSearchBtn) {
+            clearSearchBtn.classList.toggle('hidden', search === '');
+        }
+
+        const rows = document.querySelectorAll('.student-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = (row.getAttribute('data-name') || '').toLowerCase();
+            const username = (row.getAttribute('data-username') || '').toLowerCase();
+            const className = row.getAttribute('data-class') || '';
+            const mustChange = row.getAttribute('data-must-change') || '0';
+            const hasLogin = row.getAttribute('data-has-login') || '0';
+
+            // Filter Pencarian Teks
+            let matchesSearch = true;
+            if (search) {
+                matchesSearch = name.includes(search) || username.includes(search);
+            }
+
+            // Filter Kelas
+            let matchesClass = true;
+            if (selectedClass) {
+                matchesClass = (className === selectedClass);
+            }
+
+            // Filter Status Kata Sandi
+            let matchesPw = true;
+            if (selectedPwStatus === 'aktif') {
+                matchesPw = (mustChange === '0');
+            } else if (selectedPwStatus === 'sementara') {
+                matchesPw = (mustChange === '1');
+            }
+
+            // Filter Status Keaktifan Login
+            let matchesActivity = true;
+            if (selectedActivity === 'pernah') {
+                matchesActivity = (hasLogin === '1');
+            } else if (selectedActivity === 'belum') {
+                matchesActivity = (hasLogin === '0');
+            }
+
+            if (matchesSearch && matchesClass && matchesPw && matchesActivity) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        // Update counter & badge
+        const visibleCountEl = document.getElementById('visibleCount');
+        if (visibleCountEl) visibleCountEl.textContent = visibleCount;
+
+        // Tampilkan/sembunyikan empty state
+        const emptyRow = document.getElementById('emptyFilterRow');
+        if (emptyRow) {
+            emptyRow.classList.toggle('hidden', visibleCount > 0);
+        }
+
+        // Tampilkan tombol reset jika ada filter aktif
+        const hasActiveFilters = (search !== '' || selectedClass !== '' || selectedPwStatus !== '' || selectedActivity !== '');
+        const btnReset = document.getElementById('btnResetFilter');
+        if (btnReset) {
+            btnReset.classList.toggle('hidden', !hasActiveFilters);
+        }
+    }
+
+    function clearStudentSearch() {
+        const searchInput = document.getElementById('filterSearch');
+        if (searchInput) {
+            searchInput.value = '';
+            applyStudentFilters();
+            searchInput.focus();
+        }
+    }
+
+    function resetStudentFilters() {
+        if (document.getElementById('filterSearch')) document.getElementById('filterSearch').value = '';
+        if (document.getElementById('filterClass')) document.getElementById('filterClass').value = '';
+        if (document.getElementById('filterPasswordStatus')) document.getElementById('filterPasswordStatus').value = '';
+        if (document.getElementById('filterActivity')) document.getElementById('filterActivity').value = '';
+        applyStudentFilters();
     }
 </script>
 {% endblock %}
