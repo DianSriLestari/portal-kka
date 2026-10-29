@@ -13,4 +13,4 @@ if __name__ == "__main__":
     print(">>> MEMULAI PORTAL PEMBELAJARAN KKA FASE E (SMAN 7 PONTIANAK)")
     print(f">>> Port: {port}")
     print("=" * 60)
-    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=True)

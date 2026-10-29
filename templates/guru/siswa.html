@@ -489,5 +489,42 @@
         if (document.getElementById('filterActivity')) document.getElementById('filterActivity').value = '';
         applyStudentFilters();
     }
+
+    // Inisialisasi otomatis opsi kelas dari data tabel
+    function initClassDropdown() {
+        const select = document.getElementById('filterClass');
+        if (!select) return;
+
+        const existingValues = new Set();
+        for (let i = 0; i < select.options.length; i++) {
+            if (select.options[i].value) {
+                existingValues.add(select.options[i].value.trim());
+            }
+        }
+
+        const rows = document.querySelectorAll('.student-row');
+        const classes = new Set();
+        rows.forEach(r => {
+            const c = (r.getAttribute('data-class') || '').trim();
+            if (c) classes.add(c);
+        });
+
+        Array.from(classes).sort().forEach(c => {
+            if (!existingValues.has(c)) {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                select.appendChild(opt);
+                existingValues.add(c);
+            }
+        });
+    }
+
+    // Jalankan inisialisasi saat halaman selesai dimuat
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initClassDropdown);
+    } else {
+        initClassDropdown();
+    }
 </script>
 {% endblock %}
