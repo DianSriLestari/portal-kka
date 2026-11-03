@@ -1,40 +1,30 @@
 @echo off
 chcp 65001 >nul
-title Upload Portal KKA ke GitHub untuk Render.com
+title Upload Portal KKA ke GitHub
 echo ============================================================
-echo   UPLOAD PORTAL KKA KE GITHUB (UNTUK RENDER.COM)
+echo   UPLOAD PORTAL KKA KE GITHUB (DianSriLestari/portal-kka)
 echo ============================================================
 echo.
-echo Pastikan Anda sudah membuat repository kosong di https://github.com/new
-echo Contoh URL: https://github.com/username-anda/portal-kka.git
+echo Sedang mengunggah file ke https://github.com/DianSriLestari/portal-kka ...
 echo.
-set /p REPO_URL="Masukkan URL Repository GitHub Anda: "
-
-if "%REPO_URL%"=="" (
-    echo [ERROR] URL Repository tidak boleh kosong!
-    pause
-    exit /b
-)
-
-echo.
-echo Menghubungkan ke GitHub...
-git branch -M main
-git remote remove origin 2>nul
-git remote add origin %REPO_URL%
-
-echo Mengunggah kode ke GitHub...
 git push -u origin main
 
 if %ERRORLEVEL% EQU 0 (
     echo.
     echo ============================================================
-    echo [SUKSES] Kode berhasil diunggah ke GitHub!
-    echo Sekarang buka https://dashboard.render.com
-    echo Klik "New +" -> "Web Service" -> Pilih repository Anda!
+    echo [SUKSES 100%] Semua kode berhasil diunggah ke GitHub!
+    echo.
+    echo Langkah selanjutnya:
+    echo 1. Buka https://dashboard.render.com
+    echo 2. Klik "New +" -> "Web Service"
+    echo 3. Pilih repository: DianSriLestari/portal-kka
+    echo 4. Klik "Deploy"
     echo ============================================================
 ) else (
     echo.
-    echo [GAGAL] Terjadi kesalahan saat upload. Pastikan login GitHub Anda sesuai.
+    echo ============================================================
+    echo [CATATAN] Jika diminta login, silakan klik Sign in with Browser.
+    echo ============================================================
 )
 echo.
 pause

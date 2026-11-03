@@ -9,11 +9,17 @@ echo   Domain Resmi: https://portalkka.my.id
 echo ============================================================
 echo.
 
-:: 1. Cek & Matikan sisa proses lama jika ada yang macet
+:: 1. Cek & Bersihkan proses lama agar tidak terjadi bentrok port
+echo [*] Memeriksa & merapikan proses lama...
 taskkill /f /im cloudflared.exe >nul 2>&1
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }" >nul 2>&1
+
+timeout /t 1 >nul
 
 echo [1/3] Menyalakan Server Lokal KKA...
 start "Server Portal KKA (JANGAN DITUTUP)" /min python run.py
+
+timeout /t 2 >nul
 
 echo [2/3] Menghubungkan Tunnel Resmi ke https://portalkka.my.id ...
 start "Cloudflare Tunnel (JANGAN DITUTUP)" /min "bin\cloudflared.exe" tunnel run --token eyJhIjoiMGU0YTBjMjc1MjVmNTZiZWFhNzRmNzdhMjA4NWRiYWEiLCJ0IjoiZmQ1YWRjY2YtYzFiOC00ZTg5LTgzYTQtNzYyZThlYjFjNTNiIiwicyI6IlptVmpaR0k0TjJZdE5tUTBOUzAwTmpabUxXRXdNV1l0TXpkbVlqSTVNRGd6WW1SaiJ9
